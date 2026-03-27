@@ -1,0 +1,122 @@
+#action-tags,
+#project-approve-tags,
+#survey-form,
+#survey-locations,
+#edit-boq-form {
+
+  .tag {
+
+    width:3rem;
+    height:3rem;
+    padding: 0rem .5rem;
+    border-radius: 100%;
+    border:none;
+    color:$gray-500;
+    background-color: lighten($gray-500, 18%);
+
+    &:hover {
+        color:$black;
+        background-color: lighten($gray-500, 14%);
+      }
+
+    &.tag-primary {
+      color:$blue;
+      background-color: lighten($gray-500, 18%);
+      &:hover {
+        color:$blue;
+        background-color: lighten($gray-500, 14%);
+      }
+    }
+
+    &.tag-success {
+      color:$green;
+      background-color: lighten($gray-500, 18%);
+      &:hover {
+        color:$green;
+        background-color: lighten($gray-500, 14%);
+      }
+    }
+
+    &.tag-danger {
+      color:lighten($red,20%);
+      background-color: lighten($gray-500, 18%);
+      &:hover {
+        color:$red;
+        background-color: lighten($gray-500, 14%);
+      }
+    }
+
+    &.tag-add-location {
+      color:$white;
+      background-color: $blue;
+      &:hover {
+        color:$white;
+        background-color: lighten($blue, 14%);
+      }
+    }
+
+    &.tag-disabled {
+      color:darken($gray-500, 10%);
+      background-color: lighten($gray-500, 18%);
+      &:hover {
+        color:darken($gray-500, 14%);
+        background-color: lighten($gray-500, 14%);
+      }
+    }
+  }
+
+  // .tag {
+  //   width:2.5rem;
+  //   height:2.5rem;
+  //   color:$blue;
+  //   padding: 0rem .5rem;
+  //   border-radius: 100%;
+  //   border:none;
+  //   background-color: lighten($gray-500, 18%);
+  //   &:hover {
+  //     color:$blue;
+  //     background-color: lighten($gray-500, 14%);
+  //   }
+  // }
+
+  .tag-disabled {
+    width:2.5rem;
+    height:2.5rem;
+    color:darken($gray-500, 10%);
+    padding: 0rem .5rem;
+    border-radius: 100%;
+    border:none;
+    background-color: lighten($gray-500, 18%);
+    &:hover {
+      color:darken($gray-500, 14%);
+      background-color: lighten($gray-500, 14%);
+    }
+  }
+
+  .tag-danger {
+    width:2.5rem;
+    height:2.5rem;
+    color:lighten($red,20%);
+    padding: 0rem .5rem;
+    border-radius: 100%;
+    border:none;
+    background-color: lighten($gray-500, 18%);
+    &:hover {
+      color:$red;
+      background-color: lighten($gray-500, 14%);
+    }
+  }
+  .tag-add-location {
+    width:2.5rem;
+    height:2.5rem;
+    color:$white;
+    padding: 0rem .5rem;
+    border-radius: 100%;
+    border:none;
+    background-color: $blue;
+    &:hover {
+      color:$white;
+      background-color: lighten($blue, 14%);
+    }
+  }
+}

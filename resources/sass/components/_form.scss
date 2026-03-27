@@ -1,0 +1,77 @@
+.form-group {
+  label {    
+    margin-bottom: .2rem;
+    font-size: .78rem;
+  }
+  .form-control {
+    border-radius: .35rem;
+    background-color: lighten($blue, 42%);
+    &:focus {
+      background-color: lighten($blue, 39%);
+    }
+    &:disabled {
+      background-color: lighten($gray-500, 12%);
+    }
+    .custom-select {
+      border-right: 15px transparent solid;    
+      border-bottom: 15px;
+    }    
+  }
+
+  .font-weight-500 {
+    font-weight: 500;
+  }    
+}
+
+.border-light {
+  border-color: #edeeef!important;
+}
+
+.is-loading {
+  position:relative;  
+  ::before {
+    content:"\EEC4";
+    // content:"test";
+    width: 1.5rem;
+    height: 1.5rem;
+    left:-5px;
+    position:absolute;
+    top:0;
+  }
+}
+
+.d-none {
+  display: none !important;
+}
+
+.d-show {
+  visibility: visible;
+}
+.d-hidden {
+  visibility: hidden;
+}
+
+.custom-loader-container {
+  display: none;
+  text-align: center;
+  font-size: 1.3rem;
+}
+
+.custom-loader {
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  margin-left: 15px;
+  border: 4px solid #f3f3f3; /* Light grey */
+  border-top: 4px solid rgba(44, 189, 124, 1); /* Blue */
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+

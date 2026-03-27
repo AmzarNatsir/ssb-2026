@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateReceivingDetailTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('receiving_detail', function (Blueprint $table) {
+            $table->id();
+            $table->bigInteger('receiving_id');
+            $table->bigInteger('purchasing_order_detail_id');
+            $table->bigInteger('part_id');
+            $table->integer('qty');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('receiving_detail');
+    }
+}

@@ -1,0 +1,212 @@
+#createProjectModal,
+#editProjectModal,
+#createSurveyModal,
+#editSurveyModal,
+#create-preanalyst-form,
+#projectApprovalModal,
+#aktivasiProjectModal,
+#createBoqModal,
+#editBoqModal,
+#createJampelModal,
+#editJampelModal,
+#docViewModal,
+#addDocumentModal {
+  .w600 {
+    width: 600px !important;
+    max-width: 80%;    
+  }
+  .w700 {
+    width: 700px !important;
+    max-width: 85%;
+  }
+  .modal-content {
+    border-radius: 8px;
+    padding: 1.1rem 1.5rem;
+    border:none;
+  }
+  .modal-body {
+    .absolute-close {
+      position: absolute;
+      top: -30px;
+      right: -65px;
+      background-color: white;
+      border-radius: 6rem;
+      font-weight: 600;
+      color:red;
+      padding: 0.15rem 0.5rem;
+      border: none;
+    }    
+  }
+
+  .modal-footer {
+    border-top:none;
+  }
+
+  .indicator-step {
+    width: 100%;
+    height: 10px;
+    background: rgba(22, 24, 28, 0.08);
+    border-radius: 13px;
+  }
+  .indicator-step.active {
+      background: #29ba7f;
+  }
+
+  // step 2
+  .btn-prev-step {
+    padding: 0;
+    cursor: pointer;
+    background: 0 0;
+    border: 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    position: absolute;
+    width: 2.625rem;
+    height: 2.625rem;
+    background: #fff;
+    top: 1rem;
+    left: -5.5rem;
+    border-radius: 50%;    
+  }
+
+  .upload-wrapper {
+    position:relative;
+    overflow:hidden;
+    display:inline-block;
+  }
+
+  .btn-upload {
+    border: 1px solid #29ba7f;
+    color: #29ba7f;
+    background-color: white;
+    padding: .5rem 1rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;    
+  }
+
+  // .upload-wrapper input[type=file] {
+  //   font-size: 100px;
+  //   position: absolute;
+  //   left: 0;
+  //   top: 0;
+  //   opacity: 0;
+  // }
+
+  .images-wrapper{
+    display: flex;
+    .image-thumbnail {
+      .delete-icon {
+        position: relative;
+        width: 1rem;
+        height: 1rem;
+        background: red;
+        top: -58;        
+        border-radius: 50%;
+        right: 18;
+        padding: 0.01rem 0.2rem;
+        background-color: gray;
+        color: white;        
+      }
+    }
+  }
+
+  // .btn-next-step {
+  //   padding: 0;
+  //   cursor: pointer;
+  //   background: 0 0;
+  //   border: 0;
+  //   -webkit-appearance: none;
+  //   -moz-appearance: none;
+  //   appearance: none;
+  //   position: absolute;
+  //   width: 2.625rem;
+  //   height: 2.625rem;
+  //   background: #fff;
+  //   top: 1rem;
+  //   right: -5.5rem;
+  //   border-radius: 50%;    
+  // }
+
+  
+}
+
+#docViewModal {
+  #pdf-preview {
+    display: none;
+  }  
+}
+
+#addKomiteModal,
+#addLocationModal,
+#projectApprovalModal {
+  .w800 {
+    width: 800px !important;
+    max-width: 90%;    
+  }
+  .modal-header {
+    padding: .7rem .4rem;
+    border-bottom: none;
+    #closeLocationModal,
+    #closeAddKomiteModal,
+    #closeProjectApprovalModal {
+      position: absolute;
+      top: -10px;
+      right: -40px;
+      background-color: white;      
+      border-radius: 6rem;
+      font-weight: 600;
+      color:red;      
+      padding: 0.15rem 0.5rem;
+      border: none;
+    }    
+  }
+  .modal-content {
+    border-radius: 8px;
+    padding: .5rem 1rem;
+    border:none;
+  }
+  .modal-body {
+    
+  }
+
+  .modal-footer {
+    border-top:none;
+  }
+}
+
+#surveyFormModal,
+#surveyFormUpdateModal,
+#surveyAssignmentModal {
+  .w600 {
+    width: 600px !important;
+    max-width: 80%;    
+  }
+  .modal-header {
+    padding: .7rem .4rem;
+    border-bottom: none;
+    #closeLocationModal {
+      position: absolute;
+      top: -10px;
+      right: -40px;
+      background-color: white;      
+      border-radius: 6rem;
+      font-weight: 600;
+      color:red;      
+      padding: 0.15rem 0.5rem;
+      border: none;
+    }    
+  }
+  .modal-content {
+    border-radius: 8px;
+    padding: .5rem 1rem;
+    border:none;
+  }
+  .modal-body {
+    
+  }
+  .modal-footer {
+    border-top:none;
+  }  
+}

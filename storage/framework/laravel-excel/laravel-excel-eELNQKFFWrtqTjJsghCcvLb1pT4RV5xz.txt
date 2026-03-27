@@ -1,0 +1,11 @@
+No;nik;nama_lengkap;tmp_lahir;tgl_lahir;jenkel;no_ktp;alamat;no_telepon;suku;agama;jen_pend;status_nikah;tgl_masuk
+1;101001;Testing 1;Testing;01/01/1990;1;23232;Jl. Testing;878787;Suku 1;1;1;1;01/01/2001
+2;101002;Testing 2;Testing 2;01/01/1991;1;87787;Jl.Testing 2;998;Suku 2;1;4;1;01/01/2001
+3;101003;Testing 3;Testing 3;01/01/1992;1;87878;Jl.Testing 3;88787;Suku 3;1;4;1;01/01/2001
+4;101004;Testing 4;Testing 4;01/01/1992;1;87787;Jl.Testing 4;79979;Suku 4;1;5;1;01/01/2001
+5;101005;Testing 5;Testing 5;01/01/1993;1;879898;J. Testing 5;98898;Suku 5;1;5;1;01/01/2001
+6;101006;Testing 6;Testing 6;01/01/1993;1;978998;Jl. Testing 6;878787;Suku 6;1;5;1;01/01/2001
+7;101007;Testing 7;Testing 7;01/01/1994;1;979898;Jl. Testing 7;979898;Suku 7;1;5;1;01/01/2001
+8;101008;Testing 8;Testing 8;01/01/1994;1;87787;Jl. Testing;87878;Suku 8;1;4;1;01/01/2001
+9;101009;Testing 9;Testing 9;01/01/1990;1;87878;Jl. Testing;868787;Suku 9;1;4;1;01/01/2001
+10;101010;Testing 10;Testing 10;01/01/1992;1;87877;J. Testing 10;6887;Suku 10;1;4;1;01/01/2001

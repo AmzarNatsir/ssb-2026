@@ -1,0 +1,15 @@
+.tooltip-inner {
+  padding:.3rem 0.5rem;
+  color:$white;
+  text-align:center;
+  font-weight:400; 
+  background: -webkit-gradient(linear, left top, left 25, from(#F4F4F4), color-stop(4%, #B4C8D6), to(#F4F4F4));
+  background: -moz-linear-gradient(top, #F4F4F4, #B4C8D6 1px, #F4F4F4 25px);  
+  border-radius:.4rem;
+  opacity: 0.8;
+  max-width: none;
+}
+
+.bs-tooltip-auto[x-placement^=top] .arrow::before, .bs-tooltip-top .arrow::before {
+  opacity: 0.8;
+}

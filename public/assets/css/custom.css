@@ -1,0 +1,72 @@
+.form-control {
+  padding-left:15px;
+  font-size:13px;  
+  box-shadow:inset 0 0 5px 1px #efeff2;
+  background: #f9f9fb;
+}
+.custom-file-input {
+  box-shadow:inset 0 0 5px 1px #efeff2;
+  background: #f9f9fb;
+}
+.file-input {    
+    height:38px;
+    box-shadow:inset 0 0 5px 1px #efeff2;
+    background: #f9f9fb;
+}
+.label {
+  font-weight: 600;
+  padding-left:10px;
+  font-size:12px;
+}
+.form-row {
+  margin-top:10px;
+  padding-left:20px;
+}
+.form-row-end {    
+  padding-bottom:30px;
+}
+.section {
+  margin-left:15px;
+}
+.alert {
+  padding:5px;
+}
+
+.invalid-form {
+  border:solid 2px red;
+  color: red;
+}
+.error-feedback {
+  color: red!important;
+  font-size:11px!important;
+}
+
+.modal-custom {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width:100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+}
+
+.modal-main {
+  position:fixed;
+  background: white;
+  width: 80%;
+  height: auto;
+  top:50%;
+  left:50%;
+  transform: translate(-50%,-50%);
+  border-radius: 4px;
+  padding:12px; 
+}
+
+.display-block {
+  display: block;
+}
+
+.display-none {
+  display: none;
+}

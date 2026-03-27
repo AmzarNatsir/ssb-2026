@@ -1,0 +1,12 @@
+<table>
+    <tr>
+        <td>tanggal_scan</td>
+        <td>tanggal</td>
+        <td>jam</td>
+        <td>nik_lama</td>
+        <td>i_o</td>
+        <td>lokasi_id</td>
+        <td>dhuhur</td>
+        <td>ashar</td>
+    </tr>
+</table>

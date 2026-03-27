@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Models\HRD;
+
+use Illuminate\Database\Eloquent\Model;
+
+class CutiPerubahanModel extends Model
+{
+    protected $table = "hrd_cuti_perubahan";
+    protected $fillable = ['id_head', 'tgl_akhir_edit', 'jumlah_hari_edit', 'alasan_perubahan', 'tgl_awal_origin', 'tgl_akhir_origin', 'jumlah_hari_origin', 'approval_key', 'create_by', 'current_approval_id', 'is_draft', 'sts_pengajuan'];
+
+    public function get_cuti_origin(){
+        return $this->belongsTo('App\Models\HRD\CutiModel', 'id_head', 'id');
+    }
+
+    public function get_current_approve()
+    {
+        return $this->belongsTo('App\Models\HRD\KaryawanModel', 'current_approval_id', 'id');
+    }
+
+    public function get_create_by()
+    {
+        return $this->belongsTo('App\User', 'create_by', 'id');
+    }
+
+}

@@ -1,0 +1,31 @@
+.btn-circular-delete {
+	width:2rem;
+    height:2rem;
+    color:lighten($red,20%);
+    padding: 0rem .5rem;
+    border-radius: 100%;
+    border:none;
+    background-color: lighten($gray-500, 18%);
+    &:hover {
+      color:$red;
+      background-color: lighten($gray-500, 14%);            
+    }
+}
+
+.btn-confirm-delete {
+	color:$white;
+	background-color: $green;
+	&:hover {
+		color:lighten($white, 14%);
+		background-color: lighten($green, 14%);            
+    }
+}
+
+.btn-cancel-delete {
+	color:$white;
+	background-color: $red;	
+	&:hover {
+		color:lighten($white, 14%);
+		background-color: lighten($red, 14%);            
+  }
+}

@@ -1,0 +1,66 @@
+<table class="table datatable table-hover" style="font-size: 13px;">
+    <thead>
+        <tr>
+            <th scope="col" rowspan="2" style="width: 5%;">#</th>
+            <th scope="col" rowspan="2" style="width: 10%;">Nomor</th>
+            <th scope="col" rowspan="2" style="width: 10%;">Tanggal</th>
+            <th scope="col" rowspan="2" style="width: 15%;">Tujuan/Lokasi</th>
+            <th scope="col" rowspan="2">Alasan</th>
+            <th scope="col" colspan="2" style="text-align: center; width: 20%;">Tanggal Perjalanan</th>
+            <th scope="col" rowspan="2" style="text-align: center; width: 20%;">Persetujuan</th>
+            <th scope="col" rowspan="2" style="text-align: center; width: 10%;">Act</th>
+        </tr>
+        <tr>
+            <th style="text-align: center">Berangkat</th>
+            <th style="text-align: center">Kembali</th>
+        </tr>
+    </thead>
+    <tbody>
+    @php $nom=1 @endphp
+    @foreach($list_perdis as $list)
+    <tr>
+        <td style="text-align: center;">{{ $nom }}</td>
+        <td>{{ $list->no_perdis }}</td>
+        <td style="text-align: center;">{{ date_format(date_create($list->tgl_perdis), 'd-m-Y') }}</td>
+        <td>{{ $list->tujuan }}</td>
+        <td>{{ $list->maksud_tujuan }}</td>
+        <td style="text-align: center;">{{ date_format(date_create($list->tgl_berangkat), 'd-m-Y') }}</td>
+        <td style="text-align: center;">{{ date_format(date_create($list->tgl_kembali), 'd-m-Y') }}</td>
+        <td style="text-align: center;">
+
+        @if($list->sts_pengajuan==1)
+            <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                <div class="btn-group" role="group">
+                    <button id="btnGroupDrop1" type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Menunggu Persetujuan
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                        <a class="dropdown-item" href="#"><i class="fa fa-user mr-1"></i>{{ $list->get_current_approve->nm_lengkap }}</a>
+                        <a class="dropdown-item" href="#"><i class="fa fa-user mr-1"></i>{{ $list->get_current_approve->get_jabatan->nm_jabatan }}</a>
+                    </div>
+                </div>
+            </div>
+        @elseif($list->sts_pengajuan==2)
+            <button type="button" class="btn btn-success" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-check"></i> Approved</button>
+        @else
+            <button type="button" class="btn btn-dark" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-times"></i> Rejected</button>
+        @endif
+        </td>
+        <td style="text-align: center;">
+        @if($list->sts_pengajuan==2 && $list->tgl_kembali < date('Y-m-d'))
+            <button type="button" class="btn btn-primary" value="{{ $list->id }}" onclick="goForm(this)"   title="Pertanggung Jawaban Perdis"><i class="fa fa-upload"></i></button>
+        @endif
+        </td>
+    </tr>
+    @php $nom++ @endphp
+    @endforeach
+    </tbody>
+</table>
+ <script type="text/javascript">
+    var goForm = function(el)
+    {
+        var id_data = $(el).val();
+        window.open("{{ url('hrd/dataku/detailPerdis') }}/"+id_data);
+    }
+</script>
+

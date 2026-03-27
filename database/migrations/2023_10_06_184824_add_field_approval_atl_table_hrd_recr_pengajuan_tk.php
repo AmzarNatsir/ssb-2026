@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class AddFieldApprovalAtlTableHrdRecrPengajuanTk extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::table('hrd_recr_pengajuan_tk', function (Blueprint $table) {
+            $table->integer('id_approval_atl')->nullable();
+            $table->integer('status_approval_atl')->nullable();
+            $table->date('tanggal_approval_atl')->nullable();
+            $table->text('desk_approval_atl')->nullable();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::table('hrd_recr_pengajuan_tk', function (Blueprint $table) {
+            //
+        });
+    }
+}
