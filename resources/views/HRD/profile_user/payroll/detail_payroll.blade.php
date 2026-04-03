@@ -42,7 +42,7 @@
             </div>
         </div>
         @php
-        $total_1 = $payroll->gaji_pokok + $payroll->tunj_perusahaan + $payroll->hours_meter + $payroll->lembur;
+        $total_1 = $payroll->gaji_pokok + $payroll->tunj_perusahaan + $payroll->hours_meter + $payroll->lembur + $payroll->bonus;
         $total_bpjs = $payroll->bpjsks_karyawan + $payroll->bpjstk_jht_karyawan + $payroll->bpjstk_jp_karyawan
         @endphp
         <div class="iq-card">
@@ -83,6 +83,11 @@
                             <td>4</td>
                             <td>Lembur</td>
                             <td style="text-align:right;"><b>{{ number_format($payroll->lembur, 0, ",", ".") }}</b></td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Bonus</td>
+                            <td style="text-align:right;"><b>{{ number_format($payroll->bonus, 0, ",", ".") }}</b></td>
                         </tr>
                         <tr>
                             <td></td>
