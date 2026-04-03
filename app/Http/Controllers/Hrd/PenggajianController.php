@@ -15,11 +15,13 @@ use App\Models\HRD\PayrollHeaderModel;
 use App\Models\HRD\PayrollModel;
 use App\Models\HRD\PinjamanKaryawanModel;
 use App\Models\HRD\PotonganGajiKaryawanModel;
+use App\Services\PayrollImportValidator;
 use App\Traits\Payroll;
 use Barryvdh\DomPDF\PDF as DomPDFPDF;
 use Illuminate\Http\Request;
 use Config;
 use Illuminate\Support\Facades\Config as FacadesConfig;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use PDF;
 use Illuminate\Support\Str;
@@ -33,7 +35,7 @@ class PenggajianController extends Controller
     {
         $data['list_bulan'] = Config::get("constants.bulan");
         // $data['all_departemen'] = DepartemenModel::where('status', 1)->get();
-        $data['PeriodePenggajian'] = PayrollHeaderModel::where('tahun', date('Y'))->get();
+        $data['PeriodePenggajian'] = PayrollHeaderModel::where('tahun', date('Y'))->orderby('bulan')->get();
         return view('HRD.penggajian.index', $data);
     }
     //step 1
@@ -58,7 +60,7 @@ class PenggajianController extends Controller
                 $msg = "Data berhasil disimpan";
             } else {
                 $status = false;
-                $msg = "Periode Penggajian sudah ada..";
+                $msg = "Periode Penggajian sudah dibuat..";
             }
         } catch (Throwable $e) {
             Log::error('Transaction failed: '.$e->getMessage());
@@ -1012,13 +1014,283 @@ class PenggajianController extends Controller
         return view("HRD.penggajian.tools.formImport");
     }
 
-    public function doImportPeriodePenggajian()
+    public function doImportPeriodePenggajian(Request $request)
     {
         try {
-            Excel::import(new PeriodePenggajianImport, request()->file_imp);
+            if (!$request->hasFile('file_imp')) {
+                return back()->withStatus('Gagal Import: File tidak ditemukan atau ukuran file melebihi batas sistem.');
+            }
+
+            $file = $request->file('file_imp');
+            if (!$file->isValid()) {
+                return back()->withStatus('Gagal Import: ' . $file->getErrorMessage());
+            }
+
+            // Store file temporarily using direct move
+            $fileName = 'import_' . time() . '_' . $file->getClientOriginalName();
+            $tempPath = storage_path('app/temp');
+            if (!file_exists($tempPath)) {
+                mkdir($tempPath, 0755, true);
+            }
+            $file->move($tempPath, $fileName);
+            $fullPath = $tempPath . DIRECTORY_SEPARATOR . $fileName;
+
+            if (!file_exists($fullPath)) {
+                return back()->withStatus('Gagal Import: File gagal dipindahkan ke direktori sementara.');
+            }
+
+            Excel::import(new PeriodePenggajianImport, $fullPath);
+
+            // Clean up
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
+
             return back()->withStatus('Excel file import succesfully');
         } catch (\Exception $ex) {
-            return back()->withStatus($ex->getMessage());
+            Log::error('Import error: ' . $ex->getMessage());
+            return back()->withStatus('Error during import: ' . $ex->getMessage());
+        }
+    }
+
+    /**
+     * Preview Excel file and return parsed data with validation
+     * Used for payroll import preview functionality
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function previewImportPeriodePenggajian(Request $request)
+    {
+        try {
+            // Validate file upload
+            $request->validate([
+                'file_imp' => 'required|file|mimes:csv,xlsx|max:10240' // 10MB max
+            ]);
+
+            $file = $request->file('file_imp');
+
+            // Parse Excel file
+            $importer = new PeriodePenggajianImport();
+            $parsedData = $importer->parseForPreview($file);
+
+            // Validate parsed data
+            $validator = new PayrollImportValidator();
+            $validationResults = $validator->validate($parsedData);
+
+            // Calculate summary counts
+            $summary = [
+                'total_rows' => $parsedData->count(),
+                'valid_rows' => count($validationResults['valid']),
+                'error_rows' => count($validationResults['errors']),
+                'warning_rows' => count($validationResults['warnings'])
+            ];
+
+            // Store parsed data and validation results in session
+            $sessionKey = 'payroll_import_preview_' . auth()->id() . '_' . time();
+            session([
+                $sessionKey => [
+                    'parsed_data' => $parsedData->toArray(),
+                    'validation_results' => $validationResults,
+                    'summary' => $summary,
+                    'created_at' => now()->toDateTimeString()
+                ]
+            ]);
+
+            // Store session key for later retrieval
+            session(['payroll_import_session_key' => $sessionKey]);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'rows' => $parsedData->toArray(),
+                    'validation' => $validationResults['all'],
+                    'summary' => $summary,
+                    'session_key' => $sessionKey
+                ]
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File validation failed',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            Log::error('Preview import failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to parse Excel file: ' . $e->getMessage()
+            ], 422);
+        }
+    }
+
+    /**
+     * Confirm and execute the import from session data
+     * Used for payroll import confirmation functionality
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function confirmImportPeriodePenggajian(Request $request)
+    {
+        try {
+            // Retrieve session key
+            $sessionKey = session('payroll_import_session_key');
+
+            // Check if session data exists
+            if (!$sessionKey || !session()->has($sessionKey)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Preview data not found. Please upload the file again.'
+                ], 400);
+            }
+
+            // Retrieve parsed data from session
+            $sessionData = session($sessionKey);
+            $parsedData = collect($sessionData['parsed_data']);
+
+            // Re-validate data as security check
+            $validator = new PayrollImportValidator();
+            $validationResults = $validator->validate($parsedData);
+
+            // Initialize counters
+            $importedCount = 0;
+            $skippedDuplicates = 0;
+
+            // Wrap database operations in transaction
+            DB::beginTransaction();
+
+            try {
+                // Insert only valid rows (skip duplicates and error rows)
+                foreach ($parsedData as $index => $row) {
+                    // Check validation status for this row from the indexed array
+                    $rowValidationStatus = $validationResults['all'][$index]['status'] ?? 'error';
+
+                    // Skip error rows
+                    if ($rowValidationStatus === 'error') {
+                        continue;
+                    }
+
+                    // Check if duplicate
+                    $isDuplicate = PayrollModel::where('id_karyawan', $row['id_karyawan'])
+                        ->where('bulan', $row['bulan'])
+                        ->where('tahun', $row['tahun'])
+                        ->exists();
+
+                    if ($isDuplicate) {
+                        $skippedDuplicates++;
+                        continue;
+                    }
+
+                    // Insert valid row
+                    $data = [
+                        "id_karyawan" => $row["id_karyawan"],
+                        "id_departemen" => $row["id_departemen"],
+                        "bulan" => $row["bulan"],
+                        "tahun" => $row["tahun"],
+                        "gaji_pokok" => (empty($row['gaji_pokok'])) ? 0 : $row['gaji_pokok'],
+                        "gaji_bpjs" => (empty($row['gaji_bpjs'])) ? 0 : $row['gaji_bpjs'],
+                        "tunj_perusahaan" => (empty($row['tunj_bpjs'])) ? 0 : $row['tunj_bpjs'],
+                        "tunj_tetap" => (empty($row['tunj_tetap'])) ? 0 : $row['tunj_tetap'],
+                        "hours_meter" => (empty($row['hours_meter'])) ? 0 : $row['hours_meter'],
+   "lembur" => (empty($row['lembur'])) ? 0 : $row['lembur'],
+                        "bonus" => (empty($row['bonus'])) ? 0 : $row['bonus'],
+                        "bpjsks_perusahaan" => (empty($row['bpjsks_perusahaan'])) ? 0 : $row['bpjsks_perusahaan'],
+                        "bpjstk_jht_perusahaan" => (empty($row['bpjstk_jht_perusahaan'])) ? 0 : $row['bpjstk_jht_perusahaan'],
+                        "bpjstk_jp_perusahaan" => (empty($row['bpjstk_jp_perusahaan'])) ? 0 : $row['bpjstk_jp_perusahaan'],
+                        "bpjstk_jkm_perusahaan" => (empty($row['bpjstk_jkm_perusahaan'])) ? 0 : $row['bpjstk_jkm_perusahaan'],
+                        "bpjstk_jkk_perusahaan" => (empty($row['bpjstk_jkk_perusahaan'])) ? 0 : $row['bpjstk_jkk_perusahaan'],
+                        "gaji_bruto" => (empty($row['gaji_bruto'])) ? 0 : $row['gaji_bruto'],
+                        "bpjsks_karyawan" => (empty($row['bpjsks_karyawan'])) ? 0 : $row['bpjsks_karyawan'],
+                        "bpjstk_jht_karyawan" => (empty($row['bpjstk_jht_karyawan'])) ? 0 : $row['bpjstk_jht_karyawan'],
+                        "bpjstk_jp_karyawan" => (empty($row['bpjstk_jp_karyawan'])) ? 0 : $row['bpjstk_jp_karyawan'],
+                        "bpjstk_jkm_karyawan" => (empty($row['bpjstk_jkm_karyawan'])) ? 0 : $row['bpjstk_jkm_karyawan'],
+                        "bpjstk_jkk_karyawan" => (empty($row['bpjstk_jkk_karyawan'])) ? 0 : $row['bpjstk_jkk_karyawan'],
+                        "pot_sedekah" => (empty($row['pot_sedekah'])) ? 0 : $row['pot_sedekah'],
+                        "pot_pkk" => (empty($row['pot_pkk'])) ? 0 : $row['pot_pkk'],
+                        "pot_air" => (empty($row['pot_air'])) ? 0 : $row['pot_air'],
+                        "pot_rumah" => (empty($row['pot_rumah'])) ? 0 : $row['pot_rumah'],
+                        "pot_toko_alif" => (empty($row['pot_toko_alif'])) ? 0 : $row['pot_toko_alif'],
+                        "pot_tunj_perusahaan" => (empty($row['tunj_bpjs'])) ? 0 : $row['tunj_bpjs'],
+                        "thp" => (empty($row['thp'])) ? 0 : $row['thp'],
+                        "created_at" => now(),
+                        "updated_at" => now(),
+                        'cetak_slip' => 0
+                    ];
+
+                    PayrollModel::insert($data);
+                    $importedCount++;
+                }
+
+                // Commit transaction
+                DB::commit();
+
+                // Clear session data after successful import
+                session()->forget($sessionKey);
+                session()->forget('payroll_import_session_key');
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Import completed successfully',
+                    'data' => [
+                        'imported_rows' => $importedCount,
+                        'skipped_duplicates' => $skippedDuplicates,
+                        'total_processed' => $importedCount + $skippedDuplicates
+                    ]
+                ]);
+
+            } catch (\Exception $e) {
+                // Rollback on database errors
+                DB::rollBack();
+                Log::error('Import transaction failed: ' . $e->getMessage());
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Import failed due to database error. Please try again.'
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Confirm import failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancel import preview and clear session data
+     * Used for payroll import cancellation functionality
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function cancelImportPreview(Request $request)
+    {
+        try {
+            // Retrieve session key
+            $sessionKey = session('payroll_import_session_key');
+
+            // Clear session data
+            if ($sessionKey) {
+                session()->forget($sessionKey);
+            }
+            session()->forget('payroll_import_session_key');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Preview cancelled successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Cancel preview failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to cancel preview: ' . $e->getMessage()
+            ], 500);
         }
     }
 

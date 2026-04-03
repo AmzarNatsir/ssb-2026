@@ -837,6 +837,9 @@ Route::group(['middleware' => 'auth'], function()
         Route::get('downloadtemplatePeriodePenggajian/{tahun}/{bulan}', 'Hrd\PenggajianController@templatePeriodePenggajian');
         Route::get('importPeriodePenggajian', 'Hrd\PenggajianController@formImportPeriodePenggajian')->name("importPeriodePenggajian");
         Route::post('doImportPeriodePenggajian', 'Hrd\PenggajianController@doImportPeriodePenggajian')->name("doImportPeriodePenggajian");
+        Route::post('previewImportPeriodePenggajian', 'Hrd\PenggajianController@previewImportPeriodePenggajian')->name("previewImportPeriodePenggajian");
+        Route::post('confirmImportPeriodePenggajian', 'Hrd\PenggajianController@confirmImportPeriodePenggajian')->name("confirmImportPeriodePenggajian");
+        Route::post('cancelImportPreview', 'Hrd\PenggajianController@cancelImportPreview')->name("cancelImportPreview");
         //submit to approve
         Route::get('submitPenggajian/{bulan}/{tahun}/{uuid}', 'Hrd\PenggajianController@submitPenggajian');
         Route::post('storeSubmitPenggajian', 'Hrd\PenggajianController@storeSubmitPenggajian');
