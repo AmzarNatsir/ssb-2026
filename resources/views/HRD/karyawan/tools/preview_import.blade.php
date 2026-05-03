@@ -48,6 +48,7 @@
                         <thead>
                             <tr>
                                 <th>No</th>
+                                <th>Tipe</th>
                                 <th>Status</th>
                                 <th>Errors</th>
                                 <th>NIK</th>
@@ -69,6 +70,13 @@
                             @foreach($preview_data as $index => $row)
                             <tr class="{{ $row['isValid'] ? '' : 'table-danger' }}">
                                 <td>{{ $index + 1 }}</td>
+                                <td>
+                                    @if($row['isNew'])
+                                        <span class="badge badge-info">Data Baru</span>
+                                    @else
+                                        <span class="badge badge-warning">Update Data</span>
+                                    @endif
+                                </td>
                                 <td>
                                     @if($row['isValid'])
                                         <span class="badge badge-success">Valid</span>

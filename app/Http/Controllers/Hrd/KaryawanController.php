@@ -820,6 +820,7 @@ class KaryawanController extends Controller
         $pendidikan_keys = array_keys(Config::get("constants.jenjang_pendidikan") ?? []);
         $status_nikah_keys = array_keys(Config::get("constants.status_pernikahan") ?? []);
         $status_karyawan_keys = array_keys(Config::get("constants.status_karyawan") ?? []);
+        $existing_niks = KaryawanModel::pluck('nik')->toArray();
 
         $preview_data = [];
         $hasValidData = false;
@@ -928,6 +929,7 @@ class KaryawanController extends Controller
             $preview_data[] = [
                 'isValid' => $isValid,
                 'errors' => $errors,
+                'isNew' => !in_array($row['nik'], $existing_niks),
                 'data' => $row
             ];
         }
@@ -953,6 +955,143 @@ class KaryawanController extends Controller
         }
 
         return redirect('hrd/karyawan/importTools')->with('konfirm', 'Proses Import Selesai. Data valid telah disimpan/diupdate.');
+    }
+
+    public function downloadTemplateKaryawan()
+    {
+        $templatePath = public_path('template_karyawan_terbaru_UPDATE.xlsx');
+        if (!file_exists($templatePath)) {
+            return back()->with('error', 'File template tidak ditemukan.');
+        }
+
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($templatePath);
+
+        // Kosongkan sheet KARYAWAN (Hapus baris 2 sampai akhir)
+        $sheetKaryawan = $spreadsheet->getSheetByName('KARYAWAN');
+        if ($sheetKaryawan) {
+            $highestRow = $sheetKaryawan->getHighestRow();
+            if ($highestRow >= 2) {
+                // Cannot remove multiple rows safely without shifting, simplest is just clear values
+                for ($row = 2; $row <= $highestRow; $row++) {
+                    for ($col = 1; $col <= \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($sheetKaryawan->getHighestColumn()); $col++) {
+                        $sheetKaryawan->setCellValueExplicitByColumnAndRow($col, $row, '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                    }
+                }
+            }
+        }
+
+        // Update ID DIVISI
+        $sheetDivisi = $spreadsheet->getSheetByName('ID DIVISI');
+        if ($sheetDivisi) {
+            $highestRow = $sheetDivisi->getHighestRow();
+            if ($highestRow >= 2) {
+                for ($row = 2; $row <= $highestRow; $row++) {
+                    for ($col = 1; $col <= \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($sheetDivisi->getHighestColumn()); $col++) {
+                        $sheetDivisi->setCellValueExplicitByColumnAndRow($col, $row, '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                    }
+                }
+            }
+            $sheetDivisi->setCellValue('A1', 'ID');
+            $sheetDivisi->setCellValue('B1', 'NAMA DIVISI');
+            $divisis = \App\Models\HRD\DivisiModel::all();
+            $row = 2;
+            foreach ($divisis as $divisi) {
+                $sheetDivisi->setCellValueExplicit('A' . $row, $divisi->id, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheetDivisi->setCellValueExplicit('B' . $row, $divisi->nm_divisi, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $row++;
+            }
+        }
+
+        // Update ID DEPARTEMEN
+        $sheetDept = $spreadsheet->getSheetByName('ID DEPARTEMEN');
+        if ($sheetDept) {
+            $highestRow = $sheetDept->getHighestRow();
+            if ($highestRow >= 2) {
+                for ($row = 2; $row <= $highestRow; $row++) {
+                    for ($col = 1; $col <= \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($sheetDept->getHighestColumn()); $col++) {
+                        $sheetDept->setCellValueExplicitByColumnAndRow($col, $row, '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                    }
+                }
+            }
+            $sheetDept->setCellValue('A1', 'ID');
+            $sheetDept->setCellValue('B1', 'DIVISI');
+            $sheetDept->setCellValue('C1', 'NAMA DEPARTEMEN');
+            $depts = \App\Models\HRD\DepartemenModel::with('get_master_divisi')->get();
+            $row = 2;
+            foreach ($depts as $dept) {
+                $divisiName = $dept->get_master_divisi ? $dept->get_master_divisi->nm_divisi : '';
+                $sheetDept->setCellValueExplicit('A' . $row, $dept->id, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheetDept->setCellValueExplicit('B' . $row, $divisiName, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheetDept->setCellValueExplicit('C' . $row, $dept->nm_dept, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $row++;
+            }
+        }
+
+        // Update ID SUB DEPARTEMEN
+        $sheetSubDept = $spreadsheet->getSheetByName('ID SUB DEPARTEMEN');
+        if ($sheetSubDept) {
+            $highestRow = $sheetSubDept->getHighestRow();
+            if ($highestRow >= 2) {
+                for ($row = 2; $row <= $highestRow; $row++) {
+                    for ($col = 1; $col <= \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($sheetSubDept->getHighestColumn()); $col++) {
+                        $sheetSubDept->setCellValueExplicitByColumnAndRow($col, $row, '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                    }
+                }
+            }
+            $sheetSubDept->setCellValue('A1', 'ID');
+            $sheetSubDept->setCellValue('B1', 'DEPARTEMEN');
+            $sheetSubDept->setCellValue('C1', 'NAMA SUB DEPARTEMEN');
+            $subdepts = \App\Models\HRD\SubDepartemenModel::with('departemen')->get();
+            $row = 2;
+            foreach ($subdepts as $subdept) {
+                $deptName = $subdept->departemen ? $subdept->departemen->nm_dept : '';
+                $sheetSubDept->setCellValueExplicit('A' . $row, $subdept->id, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheetSubDept->setCellValueExplicit('B' . $row, $deptName, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheetSubDept->setCellValueExplicit('C' . $row, $subdept->nm_subdept, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $row++;
+            }
+        }
+
+        // Update ID JABATAN
+        $sheetJabatan = $spreadsheet->getSheetByName('ID JABATAN');
+        if ($sheetJabatan) {
+            $highestRow = $sheetJabatan->getHighestRow();
+            if ($highestRow >= 2) {
+                for ($row = 2; $row <= $highestRow; $row++) {
+                    for ($col = 1; $col <= \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($sheetJabatan->getHighestColumn()); $col++) {
+                        $sheetJabatan->setCellValueExplicitByColumnAndRow($col, $row, '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                    }
+                }
+            }
+            $sheetJabatan->setCellValue('A1', 'ID');
+            $sheetJabatan->setCellValue('B1', 'DIVISI');
+            $sheetJabatan->setCellValue('C1', 'DEPARTEMEN');
+            $sheetJabatan->setCellValue('D1', 'NAMA JABATAN');
+            $sheetJabatan->setCellValue('E1', 'LEVEL JABATAN');
+            $jabatans = \App\Models\HRD\JabatanModel::with(['mst_divisi', 'mst_departemen', 'mst_level_jabatan'])->get();
+            $row = 2;
+            foreach ($jabatans as $jabatan) {
+                $divisiName = $jabatan->mst_divisi ? $jabatan->mst_divisi->nm_divisi : '';
+                $deptName = $jabatan->mst_departemen ? $jabatan->mst_departemen->nm_dept : '';
+                $levelName = $jabatan->mst_level_jabatan ? $jabatan->mst_level_jabatan->nm_level : '';
+                $sheetJabatan->setCellValueExplicit('A' . $row, $jabatan->id, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheetJabatan->setCellValueExplicit('B' . $row, $divisiName, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheetJabatan->setCellValueExplicit('C' . $row, $deptName, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheetJabatan->setCellValueExplicit('D' . $row, $jabatan->nm_jabatan, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheetJabatan->setCellValueExplicit('E' . $row, $levelName, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $row++;
+            }
+        }
+
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $fileName = 'Template_Karyawan_' . date('Ymd_His') . '.xlsx';
+        
+        return response()->streamDownload(function() use ($writer) {
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"'
+        ]);
     }
     public function doHapusDBKaryawan()
     {

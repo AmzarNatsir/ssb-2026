@@ -90,6 +90,9 @@
                 <div class="iq-header-title">
                     <h4 class="card-title">Proses Import Data</h4>
                 </div>
+                <div class="iq-card-header-toolbar d-flex align-items-center">
+                    <a href="{{ route('downloadTemplateKaryawan') }}" class="btn btn-success"><i class="ri-file-excel-2-line"></i> Download Template</a>
+                </div>
             </div>
             <div class="iq-card-body">
                 <div class="row align-items-center">
