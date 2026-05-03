@@ -99,7 +99,7 @@
                     </div>
                 </div>
                 <hr>
-                <button class="btn btn-primary" name="tbl_import" id="tbl_import">Import Data</button>
+                <button class="btn btn-primary" name="tbl_import" id="tbl_import">Preview Data</button>
             </div>
             
         </div>

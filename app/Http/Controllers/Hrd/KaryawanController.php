@@ -782,11 +782,177 @@ class KaryawanController extends Controller
         $all_jabatan = JabatanModel::where('status', 1)->where('id_divisi', 0)->orderby('id_level', 'asc')->get();
         return view("HRD.karyawan.tools.import_data", compact(['all_level', 'all_divisi', 'all_jabatan', 'all_perdis']));
     }
-    public function doImport(Request $request)
+    public function previewImport(Request $request)
     {
-        Excel::import(new KaryawanImport, request()->file_imp);
+        $request->validate([
+            'file_imp' => 'required|mimes:xlsx,csv,xls'
+        ]);
 
-        return back();
+        $file = $request->file('file_imp');
+        $extension = strtolower($file->getClientOriginalExtension());
+        
+        $fileName = 'import_karyawan_' . time() . '.' . $extension;
+        $tempPath = storage_path('app/temp');
+        if (!file_exists($tempPath)) {
+            mkdir($tempPath, 0755, true);
+        }
+        $file->move($tempPath, $fileName);
+        $fullPath = $tempPath . DIRECTORY_SEPARATOR . $fileName;
+
+        if (!file_exists($fullPath)) {
+            return back()->with('error', 'Gagal Import: File gagal dipindahkan ke direktori sementara.');
+        }
+
+        $readerType = null;
+        if ($extension === 'xlsx') {
+            $readerType = \Maatwebsite\Excel\Excel::XLSX;
+        } elseif ($extension === 'csv') {
+            $readerType = \Maatwebsite\Excel\Excel::CSV;
+        }
+
+        $data = Excel::toArray(new KaryawanImport, $fullPath, null, $readerType)[0]; // get the first sheet
+
+        $divisi_ids = DivisiModel::pluck('id')->toArray();
+        $dept_ids = DepartemenModel::pluck('id')->toArray();
+        $subdept_ids = SubDepartemenModel::pluck('id')->toArray();
+        $jabatan_ids = JabatanModel::pluck('id')->toArray();
+        $agama_keys = array_keys(Config::get("constants.agama") ?? []);
+        $pendidikan_keys = array_keys(Config::get("constants.jenjang_pendidikan") ?? []);
+        $status_nikah_keys = array_keys(Config::get("constants.status_pernikahan") ?? []);
+        $status_karyawan_keys = array_keys(Config::get("constants.status_karyawan") ?? []);
+
+        $preview_data = [];
+        $hasValidData = false;
+
+        foreach ($data as $row) {
+            $isValid = true;
+            $errors = [];
+
+            // Skip empty rows (nik is required)
+            if (empty($row['nik'])) continue;
+
+            $tgl_masuk = $row['tanggal_masuk'] ?? null;
+            $tgl_lahir = $row['tanggal_lahir'] ?? null;
+
+            if (is_numeric($tgl_masuk)) {
+                try {
+                    $tgl_masuk = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($tgl_masuk)->format('Y-m-d');
+                    $row['tanggal_masuk'] = $tgl_masuk;
+                } catch (\Exception $e) {}
+            }
+            if (is_numeric($tgl_lahir)) {
+                try {
+                    $tgl_lahir = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($tgl_lahir)->format('Y-m-d');
+                    $row['tanggal_lahir'] = $tgl_lahir;
+                } catch (\Exception $e) {}
+            }
+
+            // Validate dates (YYYY-MM-DD)
+            if (!empty($tgl_masuk) && !preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $tgl_masuk)) {
+                $isValid = false;
+                $errors[] = "Format tanggal masuk tidak valid (harus YYYY-MM-DD)";
+            }
+            if (!empty($tgl_lahir) && !preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $tgl_lahir)) {
+                $isValid = false;
+                $errors[] = "Format tanggal lahir tidak valid (harus YYYY-MM-DD)";
+            }
+
+            $jenkel = $row['jenis_kelamin_id'] ?? null;
+            $agama = $row['agama_id'] ?? null;
+            $pendidikan_akhir = $row['pendidikan_akhir_id'] ?? null;
+            $status_nikah = $row['status_pernikahan_id'] ?? null;
+            $id_status_karyawan = $row['status_akryawan_id'] ?? null;
+            $id_divisi = $row['divisi_id'] ?? null;
+            $id_departemen = $row['departemen_id'] ?? null;
+            $id_subdepartemen = $row['sub_departemen_id'] ?? null;
+            $id_jabatan = $row['jabatan_id'] ?? null;
+
+            // Validate Jenkel
+            if (!empty($jenkel) && !in_array($jenkel, [1, 2])) {
+                $isValid = false;
+                $errors[] = "Jenis Kelamin tidak valid (1/2)";
+            }
+
+            // Validate Agama
+            if (!empty($agama) && !in_array($agama, $agama_keys)) {
+                $isValid = false;
+                $errors[] = "Agama ID tidak valid";
+            }
+
+            // Validate Pendidikan
+            if (!empty($pendidikan_akhir) && !in_array($pendidikan_akhir, $pendidikan_keys)) {
+                $isValid = false;
+                $errors[] = "Pendidikan Akhir ID tidak valid";
+            }
+
+            // Validate Status Nikah
+            if (!empty($status_nikah) && !in_array($status_nikah, $status_nikah_keys)) {
+                $isValid = false;
+                $errors[] = "Status Nikah ID tidak valid";
+            }
+
+            // Validate Status Karyawan
+            if (!empty($id_status_karyawan) && !in_array($id_status_karyawan, $status_karyawan_keys)) {
+                $isValid = false;
+                $errors[] = "Status Karyawan ID tidak valid";
+            }
+
+            // Validate Divisi
+            if (!empty($id_divisi) && $id_divisi != 0 && !in_array($id_divisi, $divisi_ids)) {
+                $isValid = false;
+                $errors[] = "Divisi ID tidak ditemukan di Master Divisi";
+            }
+
+            // Validate Departemen
+            if (!empty($id_departemen) && $id_departemen != 0 && !in_array($id_departemen, $dept_ids)) {
+                $isValid = false;
+                $errors[] = "Departemen ID tidak ditemukan di Master Departemen";
+            }
+
+            // Validate Sub Departemen
+            if (!empty($id_subdepartemen) && $id_subdepartemen != 0 && !in_array($id_subdepartemen, $subdept_ids)) {
+                $isValid = false;
+                $errors[] = "Sub Departemen ID tidak ditemukan di Master Sub Departemen";
+            }
+
+            // Validate Jabatan
+            if (!empty($id_jabatan) && $id_jabatan != 0 && !in_array($id_jabatan, $jabatan_ids)) {
+                $isValid = false;
+                $errors[] = "Jabatan ID tidak ditemukan di Master Jabatan";
+            }
+
+            if ($isValid) {
+                $hasValidData = true;
+            }
+
+            $preview_data[] = [
+                'isValid' => $isValid,
+                'errors' => $errors,
+                'data' => $row
+            ];
+        }
+
+        return view('HRD.karyawan.tools.preview_import', [
+            'preview_data' => $preview_data,
+            'file_path' => $fullPath,
+            'hasValidData' => $hasValidData
+        ]);
+    }
+
+    public function processImport(Request $request)
+    {
+        $file_path = $request->input('file_path');
+        if (!file_exists($file_path)) {
+            return redirect('hrd/karyawan/importTools')->with('konfirm', 'File import tidak ditemukan atau sudah kadaluarsa.');
+        }
+
+        Excel::import(new \App\Imports\KaryawanUpsertImport, $file_path);
+
+        if (file_exists($file_path)) {
+            unlink($file_path);
+        }
+
+        return redirect('hrd/karyawan/importTools')->with('konfirm', 'Proses Import Selesai. Data valid telah disimpan/diupdate.');
     }
     public function doHapusDBKaryawan()
     {

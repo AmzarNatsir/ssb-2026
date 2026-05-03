@@ -526,7 +526,8 @@ Route::group(['middleware' => 'auth'], function()
         route::post('simpandokumen', 'Hrd\KaryawanController@simpan_dokumen');
         //tools
         Route::get('importTools', 'Hrd\KaryawanController@importData')->name("importDBKaryawan");
-        Route::post('importDataKaryawan', 'Hrd\KaryawanController@doImport')->name("doImportKaryawa");
+        Route::post('importDataKaryawan', 'Hrd\KaryawanController@previewImport')->name("doImportKaryawa");
+        Route::post('processImportKaryawan', 'Hrd\KaryawanController@processImport')->name("processImportKaryawan");
         Route::get("hapusDataKaryawan", 'Hrd\KaryawanController@doHapusDBKaryawan')->name("hapusDBKaryawan");
         Route::get('importIDFingerKaryawan', 'Hrd\KaryawanController@importIDFinger');
         Route::get('downloadtemplateIDFinger', 'Hrd\KaryawanController@templateIDFingerKaryawan');
