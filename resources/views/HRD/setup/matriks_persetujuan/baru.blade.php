@@ -130,29 +130,27 @@
                     "_token": token
                 },
                 success:function(response){
-                    //show success message
                     if (response.success==true) {
                         Swal.fire({
-                            type: 'success',
                             icon: 'success',
                             title: `${response.message}`,
                             showConfirmButton: false,
-                            timer: 3000
+                            timer: 2000
+                        }).then(function() {
+                            // Refresh hanya bagian form, departemen tetap terpilih
+                            getFormAdd(document.getElementById('pil_departemen'));
                         });
-                        location.replace("{{ url('hrd/setup/matriks_persetujuan_setup') }}/"+id_group);
                     } else {
                         Swal.fire({
-                            type: 'error',
                             icon: 'error',
                             title: `${response.message}`,
-                            showConfirmButton: false,
-                            timer: 3000
+                            showConfirmButton: true,
                         });
                     }
                 },
                 error:function(error){
-                    console.log(error.responseText); // Debugging errors
-                    Swal.fire("It's danger", "Something went wrong!", "error");
+                    console.log(error.responseText);
+                    Swal.fire("Error", "Terjadi kesalahan, silakan coba lagi.", "error");
                 }
             });
         }
@@ -160,34 +158,45 @@
 
    var goDelete = function(el)
    {
-        let id_group = $("#id_group").val();
-        var psn = confirm("Yakin akan menghapus data ?")
-        if(psn==true)
-        {
-            $.ajax({
-                    url: "{{ url('hrd/setup/matriks_persetujuan_setup_delete') }}/"+$(el).val(),
+        let elRef = el;
+        Swal.fire({
+            title: 'Hapus data ini?',
+            text: 'Data yang dihapus tidak dapat dikembalikan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, hapus',
+            cancelButtonText: 'Batal'
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "{{ url('hrd/setup/matriks_persetujuan_setup_delete') }}/"+$(elRef).val(),
                     type: "GET",
                     success:function(response){
                         if(response.success==true) {
                             Swal.fire({
-                                type: 'success',
                                 icon: 'success',
                                 title: `${response.message}`,
                                 showConfirmButton: false,
-                                timer: 3000
+                                timer: 2000
+                            }).then(function() {
+                                // Refresh hanya bagian form, departemen tetap terpilih
+                                getFormAdd(document.getElementById('pil_departemen'));
                             });
-                            location.replace("{{ url('hrd/setup/matriks_persetujuan_setup') }}/"+id_group);
                         } else {
-                            Swal.fire(response.message, {
+                            Swal.fire({
                                 icon: 'warning',
+                                title: response.message
                             });
                         }
+                    },
+                    error:function() {
+                        Swal.fire("Error", "Terjadi kesalahan, silakan coba lagi.", "error");
                     }
                 });
-            return true;
-        } else {
-            return false;
-        }
+            }
+        });
    }
 
 </script>

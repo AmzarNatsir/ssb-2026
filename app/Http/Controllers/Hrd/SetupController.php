@@ -653,20 +653,28 @@ class SetupController extends Controller
     //matriks persetujuan
     public function matriks_persetujuan()
     {
+        // Load semua detail sekaligus, group berdasarkan group+departemen (menghindari N+1)
+        $allDetails = RefApprovalDetailModel::with(['getPejabat.get_jabatan'])
+            ->orderBy('approval_level')
+            ->get()
+            ->groupBy('approval_group');
+
+        $departemen = DepartemenModel::with(['get_master_divisi'])->where('status', 1)->get()->keyBy('id');
+
         $data = [
-            "list_matriks" => RefApprovalModel::orderBy('id')->get()->map( function($row) {
+            "list_matriks" => RefApprovalModel::orderBy('id')->get()->map(function($row) use($allDetails, $departemen) {
                 $arr = $row->toArray();
-                $idGroup = $row['id'];
-                $arr['list_departemen'] = DepartemenModel::with(['get_master_divisi'])->where('status', 1)->get()->map(function($row2) use($idGroup){
-                    $arr2 = $row2->toArray();
-                    $arr2['list_matriks'] = RefApprovalDetailModel::with(['getPejabat'])->where('approval_group', $idGroup)->where('approval_departemen', $row2['id'])->get();
+                $groupDetails = $allDetails->get($row['id'], collect())->groupBy('approval_departemen');
+                $arr['list_departemen'] = $departemen->filter(function($dept) use($groupDetails) {
+                    return $groupDetails->has($dept->id);
+                })->map(function($dept) use($groupDetails) {
+                    $arr2 = $dept->toArray();
+                    $arr2['list_matriks'] = $groupDetails->get($dept->id, collect());
                     return $arr2;
-                });
+                })->values();
                 return $arr;
             }),
-            // 'list_departemen' => DepartemenModel::where('status', 1)->get()
         ];
-        // dd($data);
         return view('HRD.setup.matriks_persetujuan.index', $data);
     }
     public function matriks_persetujuan_setup($id)
@@ -681,7 +689,7 @@ class SetupController extends Controller
     {
         $next_level = RefApprovalDetailModel::where('approval_group', $group)->where('approval_departemen', $departemen)->orderBy('approval_level', 'desc')->first();
         $data = [
-            'list_matriks' => RefApprovalDetailModel::with(['getPejabat'])->where('approval_group', $group)->where('approval_departemen', $departemen)->get(),
+            'list_matriks' => RefApprovalDetailModel::with(['getPejabat'])->where('approval_group', $group)->where('approval_departemen', $departemen)->orderBy('approval_level')->get(),
             'list_karyawan' => KaryawanModel::with(['get_jabatan'])->whereNotNull('id_jabatan')->whereIn("id_status_karyawan", [1, 2, 3])->get(),
             'current_level' => (empty($next_level->approval_level)) ? 1 : ($next_level->approval_level + 1)
         ];
@@ -689,6 +697,19 @@ class SetupController extends Controller
     }
     public function matriks_persetujuan_setup_store(Request $request)
     {
+        // Cek duplikat: karyawan yg sama sudah ada di group+departemen ini
+        $exists = RefApprovalDetailModel::where('approval_group', $request->id_group)
+            ->where('approval_departemen', $request->id_departemen)
+            ->where('approval_by_employee', $request->id_pejabat)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => "Pejabat ini sudah terdaftar di matriks group dan departemen yang dipilih."
+            ]);
+        }
+
         $data = [
             "approval_group" => $request->id_group,
             "approval_level" => $request->level,
