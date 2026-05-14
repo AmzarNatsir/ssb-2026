@@ -15,15 +15,22 @@ class AuthController extends Controller
     {
         if (!Auth::attempt($request->only('nik', 'password')))
         {
-
             return response()->json([
-                'message' => 'Invalid login details'
+                'message' => 'Invalid login credentials'
             ], 401);
         }
 
         $user = User::with(['karyawan' => function ($q){
             $q->select('nik','nm_lengkap');
         }])->where('nik', $request['nik'])->firstOrFail();
+
+        // Cek role — selain super admin wajib memiliki role
+        if ($user->nik !== '999999999' && $user->roles->isEmpty()) {
+            Auth::logout();
+            return response()->json([
+                'message' => 'Invalid login credentials'
+            ], 403);
+        }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 

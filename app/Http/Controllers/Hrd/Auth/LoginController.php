@@ -38,6 +38,18 @@ class LoginController extends Controller
         return view('HRD.auth.login');
     }
 
+    protected function authenticated(\Illuminate\Http\Request $request, $user)
+    {
+        if ($user->nik !== '999999999' && $user->roles->isEmpty()) {
+            $this->guard()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->back()->withErrors([
+                'nik' => 'Invalid login credentials',
+            ]);
+        }
+    }
+
     public function logout()
     {
         Auth::logout();

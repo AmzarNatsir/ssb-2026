@@ -20,7 +20,7 @@ class LoginController extends Controller
      */
     // protected $redirectTo = RouteServiceProvider::HOME;
     protected $redirectTo = RouteServiceProvider::HOME;
-    
+
     /**
      * Create a new controller instance.
      *
@@ -44,5 +44,17 @@ class LoginController extends Controller
     public function showLoginForm()
     {
         return view('Tender.auth.login');
+    }
+
+    protected function authenticated(\Illuminate\Http\Request $request, $user)
+    {
+        if ($user->nik !== '999999999' && $user->roles->isEmpty()) {
+            $this->guard()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->back()->withErrors([
+                'nik' => 'Akun Anda tidak memiliki role. Hubungi Administrator.',
+            ]);
+        }
     }
 }
