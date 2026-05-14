@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\HRD\MemoModel;
 use App\Models\HRD\DepartemenModel;
 use Illuminate\Http\Request;
-use Intervention\Image\ImageManagerStatic as Image;
-use Storage;
 //use Image;
 use File;
 
@@ -21,18 +19,26 @@ class MemoInternalController extends Controller
     }
     public function simpan(Request $request)
     {
-        $path = storage_path("app/public/memo_internal");
-        if(!File::isDirectory($path)) {
-            $path = Storage::disk('public')->makeDirectory('memo_internal');
+        $request->validate([
+            'inp_file' => 'required|mimes:jpg,jpeg,png,pdf|max:10240',
+        ]);
+
+        $file = $request->file('inp_file');
+
+        if (!$file->isValid()) {
+            return back()->withErrors(['inp_file' => 'File upload gagal: ' . $file->getErrorMessage()])->withInput();
         }
 
-        $image = $request->file('inp_file');
-        $extension = $image->getClientOriginalExtension();
-        $filename = time().date('dmY').".".$extension;
-        $image_resize = Image::make($image->getRealPath());
-        $image_resize->save(storage_path("app/public/memo_internal/".$filename));
+        $extension = strtolower($file->getClientOriginalExtension());
+        $filename  = time() . date('dmY') . '.' . $extension;
+        $destPath  = storage_path('app/public/memo_internal');
 
-        //$image_resize->save(public_path().'/upload/memo/'.$filename, 60);
+        if (!is_dir($destPath)) {
+            mkdir($destPath, 0755, true);
+        }
+
+        $file->move($destPath, $filename);
+
         MemoModel::create([
             'tgl_post' => date('Y-m-d'),
             'judul' => $request->tgl_judul,
@@ -52,20 +58,29 @@ class MemoInternalController extends Controller
     }
     public function update(Request $request, $id)
     {
-        $path = storage_path("app/public/memo_internal");
-        if(!File::isDirectory($path)) {
-            $path = Storage::disk('public')->makeDirectory('memo_internal');
-        }
         if($request->hasFile('inp_file'))
         {
-            $this->del_image_file($id);
-            $image = $request->file('inp_file');
-            $extension = $image->getClientOriginalExtension();
-            $filename = time().date('dmY').".".$extension;
-            $image_resize = Image::make($image->getRealPath());
-            $image_resize->save(storage_path("app/public/memo_internal/".$filename));
+            $request->validate([
+                'inp_file' => 'mimes:jpg,jpeg,png,pdf|max:10240',
+            ]);
 
-            //$image_resize->save(public_path().'/upload/memo/'.$filename, 60);
+            $this->del_image_file($id);
+            $file = $request->file('inp_file');
+
+            if (!$file->isValid()) {
+                return back()->withErrors(['inp_file' => 'File upload gagal: ' . $file->getErrorMessage()])->withInput();
+            }
+
+            $extension = strtolower($file->getClientOriginalExtension());
+            $filename  = time() . date('dmY') . '.' . $extension;
+            $destPath  = storage_path('app/public/memo_internal');
+
+            if (!is_dir($destPath)) {
+                mkdir($destPath, 0755, true);
+            }
+
+            $file->move($destPath, $filename);
+
             $update = MemoModel::find($id);
             $update->judul = $request->inp_judul;
             $update->deskripsi = $request->keterangan;
