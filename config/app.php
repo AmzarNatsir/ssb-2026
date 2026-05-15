@@ -183,7 +183,6 @@ return [
         \Intervention\Image\ImageServiceProvider::class,
 
         Barryvdh\DomPDF\ServiceProvider::class,
-        Barryvdh\Debugbar\ServiceProvider::class,
         L5Swagger\L5SwaggerServiceProvider::class,
     ],
 
@@ -243,7 +242,6 @@ return [
         'Excel' => \Maatwebsite\Excel\Facades\Excel::class,
         'Image' => \Intervention\Image\Facades\Image::class,
         'PDF' => Barryvdh\DomPDF\Facade::class,
-        'Debugbar' => Barryvdh\Debugbar\Facade::class,
 
 
     ],
