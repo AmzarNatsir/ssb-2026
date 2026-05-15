@@ -4,7 +4,6 @@ namespace App\Warehouse\Contracts;
 
 interface MasterData {
 
-    public $model;
 
     public function getAll();
 

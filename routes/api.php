@@ -19,6 +19,21 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', 'AuthController@login');
 
+Route::middleware('auth:sanctum')->post('/refresh-token', 'AuthController@refreshToken');
+
+// Admin: manage service tokens (permanent token untuk aplikasi eksternal)
+Route::middleware('sanctum')->prefix('admin')->group(function () {
+    Route::get('/service-token', 'ServiceTokenController@index');
+    Route::post('/service-token', 'ServiceTokenController@store');
+    Route::delete('/service-token/{id}', 'ServiceTokenController@destroy');
+});
+
+// Media: serve file untuk aplikasi eksternal (butuh service token)
+Route::middleware('sanctum')->prefix('media')->group(function () {
+    Route::get('/photo/{filename}', 'MediaController@getPhoto');
+    Route::get('/memo-internal/{filename}', 'MediaController@getMemoInternal');
+});
+
 
 // Route::group(['middleware' => 'web'], function(){
 
@@ -180,6 +195,13 @@ Route::post('/login', 'AuthController@login');
         Route::get('/{id}/show', 'Hse\SlaController@show_sla_form');
         Route::delete('/{id}/delete', 'Hse\SlaController@delete_sla_form');
         Route::get('/{id}/pdf', 'Hse\SlaController@show_pdf');
+    });
+
+    // Secure HRD Routes
+    Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'hrd'], function() {
+        Route::get('/profile/{id}', 'Api\HrdApiController@getProfile');
+        Route::get('/photo/{id}', 'Api\HrdApiController@getPhoto');
+        Route::get('/memo/{id}', 'Api\HrdApiController@getMemo');
     });
 
 // });
