@@ -200,6 +200,7 @@ Route::middleware('sanctum')->prefix('media')->group(function () {
     // Secure HRD Routes
     Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'hrd'], function() {
         Route::get('/profile/{id}', 'Api\HrdApiController@getProfile');
+        Route::get('/employee/department/{departmentId?}', 'Api\HrdApiController@getEmployeesByDepartment');
         Route::get('/photo/{id}', 'Api\HrdApiController@getPhoto');
         Route::get('/memo/{id}', 'Api\HrdApiController@getMemo');
     });

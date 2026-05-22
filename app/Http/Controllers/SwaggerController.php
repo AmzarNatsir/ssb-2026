@@ -11,7 +11,7 @@ use OpenApi\Attributes as OA;
     contact: new OA\Contact(email: 'admin@ssb.com')
 )]
 #[OA\Server(
-    url: 'http://localhost:8088/others/ssb-project/public/api',
+    url: 'https://hrd.ptssb.my.id/api',
     description: 'SSB API Server'
 )]
 #[OA\SecurityScheme(

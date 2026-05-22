@@ -51,9 +51,81 @@ class HrdApiController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $karyawan->only([
-                'id', 'nik', 'nm_lengkap', 'tmp_lahir', 'tgl_lahir', 'jenkel', 
-                'alamat', 'notelp', 'nmemail', 'agama', 'id_divisi', 'id_departemen', 'id_jabatan'
+                'id',
+                'nik',
+                'nm_lengkap',
+                'tmp_lahir',
+                'tgl_lahir',
+                'jenkel',
+                'alamat',
+                'notelp',
+                'nmemail',
+                'agama',
+                'id_divisi',
+                'id_departemen',
+                'id_jabatan'
             ])
+        ]);
+    }
+
+    #[OA\Get(
+        path: '/hrd/employee/department/{departmentId}',
+        summary: 'Get employees by department ID (optional)',
+        tags: ['HRD'],
+        security: [['bearerAuth' => []]],
+    )]
+    #[OA\Parameter(
+        name: 'departmentId',
+        in: 'path',
+        required: true,
+        description: 'Department ID. Set to 0 to get all employees.',
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Successful operation',
+        content: new OA\JsonContent(
+            type: 'object',
+            properties: [
+                new OA\Property(property: 'status', type: 'string', example: 'success'),
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(type: 'object')
+                )
+            ]
+        )
+    )]
+    #[OA\Response(response: 403, description: 'Unauthorized access')]
+    public function getEmployeesByDepartment($departmentId = null)
+    {
+        $this->authorize('viewAny', KaryawanModel::class);
+
+        $query = KaryawanModel::with(['get_departemen', 'get_divisi', 'get_jabatan'])
+            ->where('nik', '!=', '999999999')
+            ->whereIn('id_status_karyawan', [1, 2, 3, 7]);
+
+        if (is_numeric($departmentId) && $departmentId > 0) {
+            $query->where('id_departemen', $departmentId);
+        }
+
+        $karyawan = $query->get();
+
+        $data = $karyawan->map(function ($k) {
+            return [
+                'id' => $k->id,
+                'nik' => $k->nik,
+                'nm_lengkap' => $k->nm_lengkap,
+                'nm_divisi' => $k->get_divisi ? $k->get_divisi->nm_divisi : null,
+                'nm_departemen' => $k->get_departemen ? $k->get_departemen->nm_dept : null,
+                'nm_jabatan' => $k->get_jabatan ? $k->get_jabatan->nm_jabatan : null,
+                'status_karyawan' => $k->get_status_karyawan($k->id_status_karyawan)
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $data
         ]);
     }
 

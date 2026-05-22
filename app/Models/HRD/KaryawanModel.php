@@ -40,10 +40,8 @@ class KaryawanModel extends Model
     public function get_status_karyawan($id)
     {
         $list_status = Config::get('constants.status_karyawan');
-        foreach($list_status as $key => $value)
-        {
-            if($key==$id)
-            {
+        foreach ($list_status as $key => $value) {
+            if ($key == $id) {
                 return $value;
                 break;
             }
@@ -57,61 +55,61 @@ class KaryawanModel extends Model
 
     public function user()
     {
-        return $this->belongsTo('App\User','nik','nik');
+        return $this->belongsTo('App\User', 'nik', 'nik');
     }
 
     public function all_karyawan()
     {
         return DB::table("hrd_karyawan")
-        ->leftJoin("mst_hrd_jabatan", "hrd_karyawan.id_jabatan", "=", "mst_hrd_jabatan.id")
-        ->leftJoin("mst_hrd_sub_departemen", "hrd_karyawan.id_subdepartemen", "=", "mst_hrd_sub_departemen.id")
-        ->leftJoin("mst_hrd_departemen", "hrd_karyawan.id_departemen", "=", "mst_hrd_departemen.id")
-        ->leftJoin("mst_hrd_divisi", "hrd_karyawan.id_divisi", "=", "mst_hrd_divisi.id")
-        ->select("hrd_karyawan.*", "mst_hrd_jabatan.nm_jabatan", "mst_hrd_sub_departemen.nm_subdept", "mst_hrd_departemen.nm_dept", "mst_hrd_divisi.nm_divisi")
-        ->where("hrd_karyawan.nik", "<>", "999999999")
-        ->whereIn("hrd_karyawan.id_status_karyawan", [1, 2, 3, 7])
-        ->orderby("mst_hrd_jabatan.id_level")
-        ->get();
+            ->leftJoin("mst_hrd_jabatan", "hrd_karyawan.id_jabatan", "=", "mst_hrd_jabatan.id")
+            ->leftJoin("mst_hrd_sub_departemen", "hrd_karyawan.id_subdepartemen", "=", "mst_hrd_sub_departemen.id")
+            ->leftJoin("mst_hrd_departemen", "hrd_karyawan.id_departemen", "=", "mst_hrd_departemen.id")
+            ->leftJoin("mst_hrd_divisi", "hrd_karyawan.id_divisi", "=", "mst_hrd_divisi.id")
+            ->select("hrd_karyawan.*", "mst_hrd_jabatan.nm_jabatan", "mst_hrd_sub_departemen.nm_subdept", "mst_hrd_departemen.nm_dept", "mst_hrd_divisi.nm_divisi")
+            ->where("hrd_karyawan.nik", "<>", "999999999")
+            ->whereIn("hrd_karyawan.id_status_karyawan", [1, 2, 3, 7])
+            ->orderby("mst_hrd_jabatan.id_level")
+            ->get();
     }
 
     public function all_karyawan_per_dept($id_departemen)
     {
         return DB::table("hrd_karyawan")
-        ->leftJoin("mst_hrd_jabatan", "hrd_karyawan.id_jabatan", "=", "mst_hrd_jabatan.id")
-        ->leftJoin("mst_hrd_sub_departemen", "hrd_karyawan.id_subdepartemen", "=", "mst_hrd_sub_departemen.id")
-        ->leftJoin("mst_hrd_departemen", "hrd_karyawan.id_departemen", "=", "mst_hrd_departemen.id")
-        ->leftJoin("mst_hrd_divisi", "hrd_karyawan.id_divisi", "=", "mst_hrd_divisi.id")
-        ->select("hrd_karyawan.*", "mst_hrd_jabatan.nm_jabatan", "mst_hrd_sub_departemen.nm_subdept", "mst_hrd_departemen.nm_dept", "mst_hrd_divisi.nm_divisi")
-        ->where("hrd_karyawan.nik", "<>", "999999999")
-        ->whereIn("hrd_karyawan.id_status_karyawan", [1, 2, 3, 7])
-        ->where("hrd_karyawan.id_departemen", $id_departemen)
-        ->orderby("mst_hrd_jabatan.id_level")
-        ->get();
+            ->leftJoin("mst_hrd_jabatan", "hrd_karyawan.id_jabatan", "=", "mst_hrd_jabatan.id")
+            ->leftJoin("mst_hrd_sub_departemen", "hrd_karyawan.id_subdepartemen", "=", "mst_hrd_sub_departemen.id")
+            ->leftJoin("mst_hrd_departemen", "hrd_karyawan.id_departemen", "=", "mst_hrd_departemen.id")
+            ->leftJoin("mst_hrd_divisi", "hrd_karyawan.id_divisi", "=", "mst_hrd_divisi.id")
+            ->select("hrd_karyawan.*", "mst_hrd_jabatan.nm_jabatan", "mst_hrd_sub_departemen.nm_subdept", "mst_hrd_departemen.nm_dept", "mst_hrd_divisi.nm_divisi")
+            ->where("hrd_karyawan.nik", "<>", "999999999")
+            ->whereIn("hrd_karyawan.id_status_karyawan", [1, 2, 3, 7])
+            ->where("hrd_karyawan.id_departemen", $id_departemen)
+            ->orderby("mst_hrd_jabatan.id_level")
+            ->get();
     }
 
     public function profil($id)
     {
         return DB::table("hrd_karyawan")
-                    ->leftJoin("mst_hrd_jabatan", "hrd_karyawan.id_jabatan", "=", "mst_hrd_jabatan.id")
-                    ->leftJoin("mst_hrd_sub_departemen", "hrd_karyawan.id_subdepartemen", "=", "mst_hrd_sub_departemen.id")
-                    ->leftJoin("mst_hrd_departemen", "hrd_karyawan.id_departemen", "=", "mst_hrd_departemen.id")
-                    ->leftJoin("mst_hrd_divisi", "hrd_karyawan.id_divisi", "=", "mst_hrd_divisi.id")
-                    ->leftJoin("mst_hrd_bank", "hrd_karyawan.id_bank", "=", "mst_hrd_bank.id")
-                    ->select("hrd_karyawan.*", "mst_hrd_jabatan.nm_jabatan", "mst_hrd_sub_departemen.nm_subdept", "mst_hrd_departemen.nm_dept", "mst_hrd_divisi.nm_divisi", "mst_hrd_bank.nm_bank")
-                    ->where("hrd_karyawan.id", $id)
-                    ->get()->first();
+            ->leftJoin("mst_hrd_jabatan", "hrd_karyawan.id_jabatan", "=", "mst_hrd_jabatan.id")
+            ->leftJoin("mst_hrd_sub_departemen", "hrd_karyawan.id_subdepartemen", "=", "mst_hrd_sub_departemen.id")
+            ->leftJoin("mst_hrd_departemen", "hrd_karyawan.id_departemen", "=", "mst_hrd_departemen.id")
+            ->leftJoin("mst_hrd_divisi", "hrd_karyawan.id_divisi", "=", "mst_hrd_divisi.id")
+            ->leftJoin("mst_hrd_bank", "hrd_karyawan.id_bank", "=", "mst_hrd_bank.id")
+            ->select("hrd_karyawan.*", "mst_hrd_jabatan.nm_jabatan", "mst_hrd_sub_departemen.nm_subdept", "mst_hrd_departemen.nm_dept", "mst_hrd_divisi.nm_divisi", "mst_hrd_bank.nm_bank")
+            ->where("hrd_karyawan.id", $id)
+            ->get()->first();
     }
     public function get_nama_atasan_langsung($id)
     {
         return DB::table("hrd_karyawan")
-                    ->where("hrd_karyawan.id_jabatan", $id)
-                    ->get()->first();
+            ->where("hrd_karyawan.id_jabatan", $id)
+            ->get()->first();
     }
     public function get_nama_atasan_tidak_langsung($id)
     {
         return DB::table("hrd_karyawan")
-                    ->where("hrd_karyawan.id_jabatan", $id)
-                    ->get()->first();
+            ->where("hrd_karyawan.id_jabatan", $id)
+            ->get()->first();
     }
 
     function superior()
@@ -119,9 +117,9 @@ class KaryawanModel extends Model
         $superiors = array();
         $superior = $this->get_jabatan->get_id_gakom()->get_karyawan();
         if ($superior->get_jabatan->get_id_gakom()->get_karyawan() == is_null()) {
-        return $superior;
-        } else{
-        return $superior->superior();
+            return $superior;
+        } else {
+            return $superior->superior();
         }
     }
 

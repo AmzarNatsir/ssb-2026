@@ -11,6 +11,18 @@ class KaryawanModelPolicy
     use HandlesAuthorization;
 
     /**
+     * Determine whether the user can view any models.
+     *
+     * @param  \App\User  $user
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function viewAny(User $user)
+    {
+        // Allow if user has HRD related roles or is a Super Admin
+        return $user->hasAnyRole(['HRD', 'Manager HRD', 'Super Admin', 'super_admin']);
+    }
+
+    /**
      * Determine whether the user can view the model.
      *
      * @param  \App\User  $user

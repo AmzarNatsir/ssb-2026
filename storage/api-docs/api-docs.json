@@ -67,6 +67,58 @@
                 ]
             }
         },
+        "/hrd/employee/department/{departmentId}": {
+            "get": {
+                "tags": [
+                    "HRD"
+                ],
+                "summary": "Get employees by department ID (optional)",
+                "operationId": "81e9c5742d0772b98c2af7df6bdc9383",
+                "parameters": [
+                    {
+                        "name": "departmentId",
+                        "in": "path",
+                        "description": "Department ID. Set to 0 to get all employees.",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized access"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/hrd/photo/{id}": {
             "get": {
                 "tags": [
