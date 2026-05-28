@@ -8,36 +8,35 @@ use App\Models\HRD\MemoModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
-use OpenApi\Attributes as OA;
 
 class HrdApiController extends Controller
 {
-    #[OA\Get(
-        path: '/hrd/profile/{id}',
-        summary: 'Get employee profile by ID',
-        tags: ['HRD'],
-        security: [['bearerAuth' => []]],
-    )]
-    #[OA\Parameter(
-        name: 'id',
-        in: 'path',
-        required: true,
-        description: 'Employee ID',
-        schema: new OA\Schema(type: 'integer')
-    )]
-    #[OA\Response(
-        response: 200,
-        description: 'Successful operation',
-        content: new OA\JsonContent(
-            type: 'object',
-            properties: [
-                new OA\Property(property: 'status', type: 'string', example: 'success'),
-                new OA\Property(property: 'data', type: 'object')
-            ]
-        )
-    )]
-    #[OA\Response(response: 403, description: 'Unauthorized access')]
-    #[OA\Response(response: 404, description: 'Employee not found')]
+    /**
+     * @OA\Get(
+     *   path="/hrd/profile/{id}",
+     *   summary="Get employee profile by ID",
+     *   tags={"HRD"},
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="id",
+     *     in="path",
+     *     required=true,
+     *     description="Employee ID",
+     *     @OA\Schema(type="integer")
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="Successful operation",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       @OA\Property(property="status", type="string", example="success"),
+     *       @OA\Property(property="data", type="object")
+     *     )
+     *   ),
+     *   @OA\Response(response=403, description="Unauthorized access"),
+     *   @OA\Response(response=404, description="Employee not found")
+     * )
+     */
     public function getProfile($id)
     {
         $karyawan = KaryawanModel::with(['get_departemen', 'get_divisi', 'get_jabatan'])->find($id);
@@ -68,35 +67,35 @@ class HrdApiController extends Controller
         ]);
     }
 
-    #[OA\Get(
-        path: '/hrd/employee/department/{departmentId}',
-        summary: 'Get employees by department ID (optional)',
-        tags: ['HRD'],
-        security: [['bearerAuth' => []]],
-    )]
-    #[OA\Parameter(
-        name: 'departmentId',
-        in: 'path',
-        required: true,
-        description: 'Department ID. Set to 0 to get all employees.',
-        schema: new OA\Schema(type: 'integer')
-    )]
-    #[OA\Response(
-        response: 200,
-        description: 'Successful operation',
-        content: new OA\JsonContent(
-            type: 'object',
-            properties: [
-                new OA\Property(property: 'status', type: 'string', example: 'success'),
-                new OA\Property(
-                    property: 'data',
-                    type: 'array',
-                    items: new OA\Items(type: 'object')
-                )
-            ]
-        )
-    )]
-    #[OA\Response(response: 403, description: 'Unauthorized access')]
+    /**
+     * @OA\Get(
+     *   path="/hrd/employee/department/{departmentId}",
+     *   summary="Get employees by department ID (optional)",
+     *   tags={"HRD"},
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="departmentId",
+     *     in="path",
+     *     required=true,
+     *     description="Department ID. Set to 0 to get all employees.",
+     *     @OA\Schema(type="integer")
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="Successful operation",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       @OA\Property(property="status", type="string", example="success"),
+     *       @OA\Property(
+     *         property="data",
+     *         type="array",
+     *         @OA\Items(type="object")
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(response=403, description="Unauthorized access")
+     * )
+     */
     public function getEmployeesByDepartment($departmentId = null)
     {
         $this->authorize('viewAny', KaryawanModel::class);
@@ -129,28 +128,32 @@ class HrdApiController extends Controller
         ]);
     }
 
-    #[OA\Get(
-        path: '/hrd/photo/{id}',
-        summary: 'Get employee photo by ID',
-        tags: ['HRD'],
-        security: [['bearerAuth' => []]],
-    )]
-    #[OA\Parameter(
-        name: 'id',
-        in: 'path',
-        required: true,
-        description: 'Employee ID',
-        schema: new OA\Schema(type: 'integer')
-    )]
-    #[OA\Response(
-        response: 200,
-        description: 'Successful operation',
-        headers: [
-            new OA\Header(header: 'Content-Type', description: 'image/jpeg', schema: new OA\Schema(type: 'string'))
-        ]
-    )]
-    #[OA\Response(response: 403, description: 'Unauthorized access')]
-    #[OA\Response(response: 404, description: 'Photo not found')]
+    /**
+     * @OA\Get(
+     *   path="/hrd/photo/{id}",
+     *   summary="Get employee photo by ID",
+     *   tags={"HRD"},
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="id",
+     *     in="path",
+     *     required=true,
+     *     description="Employee ID",
+     *     @OA\Schema(type="integer")
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="Successful operation",
+     *     @OA\Header(
+     *       header="Content-Type",
+     *       description="image/jpeg",
+     *       @OA\Schema(type="string")
+     *     )
+     *   ),
+     *   @OA\Response(response=403, description="Unauthorized access"),
+     *   @OA\Response(response=404, description="Photo not found")
+     * )
+     */
     public function getPhoto($id)
     {
         $karyawan = KaryawanModel::find($id);
@@ -170,28 +173,32 @@ class HrdApiController extends Controller
         return response()->file($path);
     }
 
-    #[OA\Get(
-        path: '/hrd/memo/{id}',
-        summary: 'Get internal memo document by ID',
-        tags: ['HRD'],
-        security: [['bearerAuth' => []]],
-    )]
-    #[OA\Parameter(
-        name: 'id',
-        in: 'path',
-        required: true,
-        description: 'Memo ID',
-        schema: new OA\Schema(type: 'integer')
-    )]
-    #[OA\Response(
-        response: 200,
-        description: 'Successful operation',
-        headers: [
-            new OA\Header(header: 'Content-Type', description: 'application/pdf', schema: new OA\Schema(type: 'string'))
-        ]
-    )]
-    #[OA\Response(response: 403, description: 'Unauthorized access or inactive memo')]
-    #[OA\Response(response: 404, description: 'Memo not found')]
+    /**
+     * @OA\Get(
+     *   path="/hrd/memo/{id}",
+     *   summary="Get internal memo document by ID",
+     *   tags={"HRD"},
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="id",
+     *     in="path",
+     *     required=true,
+     *     description="Memo ID",
+     *     @OA\Schema(type="integer")
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="Successful operation",
+     *     @OA\Header(
+     *       header="Content-Type",
+     *       description="application/pdf",
+     *       @OA\Schema(type="string")
+     *     )
+     *   ),
+     *   @OA\Response(response=403, description="Unauthorized access or inactive memo"),
+     *   @OA\Response(response=404, description="Memo not found")
+     * )
+     */
     public function getMemo($id)
     {
         $memo = MemoModel::find($id);

@@ -483,7 +483,7 @@
                     "Service Token"
                 ],
                 "summary": "Generate permanent service token",
-                "description": "Membuat token permanen untuk aplikasi eksternal. Token hanya ditampilkan sekali — simpan segera.",
+                "description": "Membuat token permanen untuk aplikasi eksternal. Token hanya ditampilkan sekali - simpan segera.",
                 "operationId": "bef9668439bb0f17a19a40e8d7d124ff",
                 "requestBody": {
                     "required": true,
@@ -506,7 +506,7 @@
                                         "example": "Aplikasi HRD External"
                                     },
                                     "abilities": {
-                                        "description": "Hak akses token. Default [\\\"*\\\"] berarti semua akses.",
+                                        "description": "Hak akses token. Default [*] berarti semua akses.",
                                         "type": "array",
                                         "items": {
                                             "type": "string"
@@ -534,7 +534,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Service token berhasil dibuat. Simpan token ini — tidak akan ditampilkan lagi."
+                                            "example": "Service token berhasil dibuat. Simpan token ini - tidak akan ditampilkan lagi."
                                         },
                                         "token_id": {
                                             "type": "integer",
