@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\HRD\DepartemenModel;
 use App\Models\HRD\KaryawanModel;
 use App\Models\HRD\MemoModel;
 use Illuminate\Http\Request;
@@ -11,6 +12,55 @@ use Illuminate\Support\Facades\Response;
 
 class HrdApiController extends Controller
 {
+    /**
+     * @OA\Get(
+     *   path="/hrd/departments/active",
+     *   summary="Get active departments",
+     *   tags={"HRD"},
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Response(
+     *     response=200,
+     *     description="Successful operation",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       @OA\Property(property="status", type="string", example="success"),
+     *       @OA\Property(
+     *         property="data",
+     *         type="array",
+     *         @OA\Items(
+     *           type="object",
+     *           @OA\Property(property="id", type="integer", example=1),
+     *           @OA\Property(property="nm_dept", type="string", example="HRD"),
+     *           @OA\Property(property="id_divisi", type="integer", example=2),
+     *           @OA\Property(property="nm_divisi", type="string", nullable=true, example="Human Capital")
+     *         )
+     *       )
+     *     )
+     *   )
+     * )
+     */
+    public function getActiveDepartments()
+    {
+        $departments = DepartemenModel::with(['get_master_divisi:id,nm_divisi'])
+            ->select('id', 'nm_dept', 'id_divisi', 'status')
+            ->where('status', 1)
+            ->orderBy('nm_dept')
+            ->get()
+            ->map(function ($department) {
+                return [
+                    'id' => $department->id,
+                    'nm_dept' => $department->nm_dept,
+                    'id_divisi' => $department->id_divisi,
+                    'nm_divisi' => optional($department->get_master_divisi)->nm_divisi,
+                ];
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $departments,
+        ]);
+    }
+
     /**
      * @OA\Get(
      *   path="/hrd/profile/{id}",
