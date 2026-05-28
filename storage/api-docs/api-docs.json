@@ -15,6 +15,63 @@
         }
     ],
     "paths": {
+        "/hrd/departments/active": {
+            "get": {
+                "tags": [
+                    "HRD"
+                ],
+                "summary": "Get active departments",
+                "operationId": "8b137a632c5844656736521b3f1d26f8",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "nm_dept": {
+                                                        "type": "string",
+                                                        "example": "HRD"
+                                                    },
+                                                    "id_divisi": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "nm_divisi": {
+                                                        "type": "string",
+                                                        "example": "Human Capital",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/hrd/profile/{id}": {
             "get": {
                 "tags": [
