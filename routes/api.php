@@ -202,6 +202,9 @@ Route::middleware('sanctum')->prefix('media')->group(function () {
         Route::get('/departments/active', 'Api\HrdApiController@getActiveDepartments');
         Route::get('/profile/{id}', 'Api\HrdApiController@getProfile');
         Route::get('/employee/department/{departmentId?}', 'Api\HrdApiController@getEmployeesByDepartment');
+        Route::get('/employee/dokument/{id}', 'Api\HrdApiController@getDokumentEmployee');
+        Route::get('/recruitment/photo/{id}', 'Api\HrdApiController@getRecruitmentPhoto');
+        Route::get('/recruitment/document/{id}', 'Api\HrdApiController@getRecruitmentDocument');
         Route::get('/photo/{id}', 'Api\HrdApiController@getPhoto');
         Route::get('/memo/{id}', 'Api\HrdApiController@getMemo');
     });
