@@ -7,6 +7,7 @@ use App\Models\HRD\DepartemenModel;
 use App\Models\HRD\DokumenKaryawanjaModel;
 use App\Models\HRD\KaryawanModel;
 use App\Models\HRD\MemoModel;
+use App\Models\HRD\PerubahanStatusModel;
 use App\Models\HRD\PelamarDokumenModel;
 use App\Models\HRD\PelamarModel;
 use Illuminate\Http\Request;
@@ -263,6 +264,40 @@ class HrdApiController extends Controller
         $this->authorize('view', $memo);
 
         $path = storage_path('app/public/memo_internal/' . $memo->file_memo);
+
+        if (!file_exists($path)) {
+            return response()->json(['status' => 'error', 'message' => 'File does not exist on server'], 404);
+        }
+
+        return response()->file($path);
+    }
+
+    /**
+     * @OA\Get(
+     *   path="/hrd/hasil-evaluasi/{id}",
+     *   summary="Get employee evaluation result file by perubahan status ID",
+     *   tags={"HRD"},
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="id",
+     *     in="path",
+     *     required=true,
+     *     description="Perubahan status ID",
+     *     @OA\Schema(type="integer")
+     *   ),
+     *   @OA\Response(response=200, description="Successful operation"),
+     *   @OA\Response(response=404, description="Data or file not found")
+     * )
+     */
+    public function getHasilEvaluasi($id)
+    {
+        $perubahanStatus = PerubahanStatusModel::select('id', 'file_hasil_evaluasi')->find($id);
+
+        if (!$perubahanStatus || !$perubahanStatus->file_hasil_evaluasi) {
+            return response()->json(['status' => 'error', 'message' => 'Evaluation file not found'], 404);
+        }
+
+        $path = storage_path('app/public/hrd/hasil_evaluasi_karyawan/' . $perubahanStatus->file_hasil_evaluasi);
 
         if (!file_exists($path)) {
             return response()->json(['status' => 'error', 'message' => 'File does not exist on server'], 404);

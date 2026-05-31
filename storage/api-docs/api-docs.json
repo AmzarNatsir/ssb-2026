@@ -264,6 +264,39 @@
                 ]
             }
         },
+        "/hrd/hasil-evaluasi/{id}": {
+            "get": {
+                "tags": [
+                    "HRD"
+                ],
+                "summary": "Get employee evaluation result file by perubahan status ID",
+                "operationId": "639ba64275a4c606390d68a8553d314a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Perubahan status ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Data or file not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/hrd/employee/dokument/{id}": {
             "get": {
                 "tags": [

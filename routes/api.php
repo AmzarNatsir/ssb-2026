@@ -207,6 +207,7 @@ Route::middleware('sanctum')->prefix('media')->group(function () {
         Route::get('/recruitment/document/{id}', 'Api\HrdApiController@getRecruitmentDocument');
         Route::get('/photo/{id}', 'Api\HrdApiController@getPhoto');
         Route::get('/memo/{id}', 'Api\HrdApiController@getMemo');
+        Route::get('/hasil-evaluasi/{id}', 'Api\HrdApiController@getHasilEvaluasi');
     });
 
 // });

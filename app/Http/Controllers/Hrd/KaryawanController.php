@@ -360,30 +360,41 @@ class KaryawanController extends Controller
     }
     public function update_biodata(Request $request, $id)
     {
-        $allowedfileExtension=['jpg','png','jpeg'];
-        Image::configure(array('driver' => 'gd'));
-
         if($request->hasFile('file_photo'))
         {
-            $this->del_image_folder($id);
+            $request->validate([
+                'file_photo' => 'mimes:jpg,jpeg,png|max:10240',
+            ]);
+
             $image = $request->file('file_photo');
-            $extension = $image->getClientOriginalExtension();
+
+            if (!$image->isValid()) {
+                return back()->withErrors(['file_photo' => 'File upload gagal: ' . $image->getErrorMessage()])->withInput();
+            }
+
+            $extension = strtolower($image->getClientOriginalExtension());
+            $allowedfileExtension=['jpg','png','jpeg'];
             $check=in_array($extension,$allowedfileExtension);
             if($check)
             {
+                $currentData = KaryawanModel::find($id);
+                $oldPhoto = empty($currentData) ? null : $currentData->photo;
                 $filename = $request->inp_nik.".".$extension;
-                $path = storage_path("app/public/hrd/photo");
-                //dd($path);
-                if(!File::isDirectory($path)) {
-                    $path = Storage::disk('public')->makeDirectory('hrd/photo');
+                $destPath = storage_path('app/public/hrd/photo');
+
+                if (!is_dir($destPath)) {
+                    mkdir($destPath, 0755, true);
                 }
-                //$path = Storage::disk('local')->makeDirectory('public/hrd/photo');
-                $image_resize = Image::make($image->getRealPath());
-                $image_resize->resize(150, null, function($construction){
-                    $construction->aspectRatio();
-                });
-                //$image_resize->resize(128, 128);
-                $image_resize->save(storage_path("app/public/hrd/photo/".$filename));
+
+                $image->move($destPath, $filename);
+
+                if(!empty($oldPhoto) && $oldPhoto !== $filename) {
+                    $oldImagePath = storage_path('app/public/hrd/photo/'.$oldPhoto);
+                    if(File::exists($oldImagePath)) {
+                        File::delete($oldImagePath);
+                    }
+                }
+
                 $update = KaryawanModel::find($id);
                 $update->nm_lengkap = $request->inp_nama;
                 $update->tmp_lahir = $request->inp_tempat_lahir;
@@ -790,7 +801,7 @@ class KaryawanController extends Controller
 
         $file = $request->file('file_imp');
         $extension = strtolower($file->getClientOriginalExtension());
-        
+
         $fileName = 'import_karyawan_' . time() . '.' . $extension;
         $tempPath = storage_path('app/temp');
         if (!file_exists($tempPath)) {
@@ -1085,7 +1096,7 @@ class KaryawanController extends Controller
 
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
         $fileName = 'Template_Karyawan_' . date('Ymd_His') . '.xlsx';
-        
+
         return response()->streamDownload(function() use ($writer) {
             $writer->save('php://output');
         }, $fileName, [

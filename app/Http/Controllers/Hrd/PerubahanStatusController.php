@@ -15,7 +15,6 @@ use App\Models\HRD\ApprovalModel;
 use App\Models\HRD\JabatanModel;
 use App\Traits\SubmissionHrd;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
 
@@ -254,14 +253,14 @@ class PerubahanStatusController extends Controller
     {
         $toDay = date("Y-m-d");
         $day30 = date('Y-m-d', strtotime($toDay . ' +30 day'));
-        $data['list_jtp_hari_ini'] = KaryawanModel::where('tgl_sts_efektif_akhir', $toDay)
-                                    ->whereIn('id_status_karyawan', [1, 2])
-                                    ->where('id_departemen', auth()->user()->karyawan->id_departemen)->get();
+        $monitoring = $this->get_data_monitoring_perdept('duetoday');
+        $data['list_jtp_hari_ini'] = $monitoring['list'];
+        $data['keterangan_default'] = $monitoring['keterangan'];
 
         $data['list_pengajuan'] = PerubahanStatusModel::whereIn('status_pengajuan', [1, 2])
                                     ->whereNull('no_surat')->where('id_departemen', auth()->user()->karyawan->id_departemen)
                                     ->get();
-        $data['dueDay'] = KaryawanModel::where('tgl_sts_efektif_akhir', $toDay)
+        $data['dueDay'] = KaryawanModel::whereDate('tgl_sts_efektif_akhir', $toDay)
                                     ->whereIn('id_status_karyawan', [1, 2])
                                     ->where('id_departemen', auth()->user()->karyawan->id_departemen)
                                     ->get()->count();
@@ -277,34 +276,34 @@ class PerubahanStatusController extends Controller
 
     public function filter_data_perdept(Request $request)
     {
+        $data = $this->get_data_monitoring_perdept($request->kategori);
+        return view('HRD.perubahan_status.pengajuan.result_filter', $data);
+    }
+
+    private function get_data_monitoring_perdept($kategori)
+    {
         $toDay = date("Y-m-d");
         $day30 = date('Y-m-d', strtotime($toDay . ' +30 day'));
-        $kategori = $request->kategori;
-        if($kategori=='duetoday') {
+
+        $query = KaryawanModel::whereIn('id_status_karyawan', [1, 2])
+                    ->where('id_departemen', auth()->user()->karyawan->id_departemen);
+
+        if($kategori == 'duetoday') {
+            $query->whereDate('tgl_sts_efektif_akhir', $toDay);
             $keterangan = hrdfunction::get_hari_ini($toDay).', '.date('d').' '.hrdfunction::get_nama_bulan(date('m')). ' '.date('Y');
-            $result = KaryawanModel::where('tgl_sts_efektif_akhir', $toDay)
-                    ->whereIn('id_status_karyawan', [1, 2])
-                    ->where('id_departemen', auth()->user()->karyawan->id_departemen)
-                    ->get();
-        } elseif($kategori=='duethismonth') {
+        } elseif($kategori == 'duethismonth') {
+            $query->whereMonth('tgl_sts_efektif_akhir', date('m'))
+                  ->whereYear('tgl_sts_efektif_akhir', date('Y'));
             $keterangan = hrdfunction::get_nama_bulan(date('m')). ' '.date('Y');
-            $result = KaryawanModel::whereMonth('tgl_sts_efektif_akhir', date('m'))
-                    ->whereYear('tgl_sts_efektif_akhir', date('Y'))
-                    ->whereIn('id_status_karyawan', [1, 2])
-                    ->where('id_departemen', auth()->user()->karyawan->id_departemen)
-                    ->get();
         } else {
+            $query->whereBetween('tgl_sts_efektif_akhir', [$toDay, $day30]);
             $keterangan = "30 hari kedepan";
-            $result = KaryawanModel::whereBetween('tgl_sts_efektif_akhir', [$toDay, $day30])
-                    ->whereIn('id_status_karyawan', [1, 2])
-                    ->where('id_departemen', auth()->user()->karyawan->id_departemen)
-                    ->get();
         }
-        $data = [
-            'list' => $result,
+
+        return [
+            'list' => $query->get(),
             'keterangan' => $keterangan
         ];
-        return view('HRD.perubahan_status.pengajuan.result_filter', $data);
     }
 
     public function form_pengajuan($id)
@@ -319,19 +318,30 @@ class PerubahanStatusController extends Controller
 
     public function store_pengajuan(Request $request)
     {
+        $request->validate([
+            'inp_file_evaluasi' => 'required|mimes:pdf|max:10240',
+        ]);
+
         $id_depat_karyawan = KaryawanModel::find(auth()->user()->karyawan->id)->id_departemen;
         $_uuid = Str::uuid();
         $group = 5;
         $ifSet = hrdfunction::set_approval_cek($group, $id_depat_karyawan);
         if($ifSet > 0)
         {
-            $path = storage_path("app/public/hrd/hasil_evaluasi_karyawan");
-            if(!File::isDirectory($path)) {
-                $path = Storage::disk('public')->makeDirectory('hrd/hasil_evaluasi_karyawan');
-            }
             $file = $request->file('inp_file_evaluasi');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('public/hrd/hasil_evaluasi_karyawan', $filename);
+            if (!$file->isValid()) {
+                return redirect('hrd/perubahanstatus/list_pengajuan')->with('konfirm', 'File hasil evaluasi tidak valid, silakan upload ulang');
+            }
+
+            $extension = strtolower($file->getClientOriginalExtension());
+            $filename  = time() . date('dmY') . '.' . $extension;
+            $destPath  = storage_path('app/public/hrd/hasil_evaluasi_karyawan');
+
+            if (!is_dir($destPath)) {
+                mkdir($destPath, 0755, true);
+            }
+
+            $file->move($destPath, $filename);
 
             $exec_store = PerubahanStatusModel::create([
                 'id_karyawan' => $request->pil_karyawan,
