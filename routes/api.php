@@ -32,6 +32,10 @@ Route::middleware('sanctum')->prefix('admin')->group(function () {
 Route::middleware('sanctum')->prefix('media')->group(function () {
     Route::get('/photo/{filename}', 'MediaController@getPhoto');
     Route::get('/memo-internal/{filename}', 'MediaController@getMemoInternal');
+    Route::get('/hasil-evaluasi/{filename}', 'MediaController@getHasilEvaluasi');
+    Route::get('/employee/dokument/{filename}', 'MediaController@getDocumentEmployee');
+    Route::get('/recruitment/photo/{filename}', 'MediaController@getRecruitmentPhoto');
+    Route::get('/recruitment/document/{filename}', 'MediaController@getRecruitmentDocument');
 });
 
 
@@ -202,9 +206,6 @@ Route::middleware('sanctum')->prefix('media')->group(function () {
         Route::get('/departments/active', 'Api\HrdApiController@getActiveDepartments');
         Route::get('/profile/{id}', 'Api\HrdApiController@getProfile');
         Route::get('/employee/department/{departmentId?}', 'Api\HrdApiController@getEmployeesByDepartment');
-        Route::get('/employee/dokument/{id}', 'Api\HrdApiController@getDokumentEmployee');
-        Route::get('/recruitment/photo/{id}', 'Api\HrdApiController@getRecruitmentPhoto');
-        Route::get('/recruitment/document/{id}', 'Api\HrdApiController@getRecruitmentDocument');
         Route::get('/photo/{id}', 'Api\HrdApiController@getPhoto');
         Route::get('/memo/{id}', 'Api\HrdApiController@getMemo');
         Route::get('/hasil-evaluasi/{id}', 'Api\HrdApiController@getHasilEvaluasi');

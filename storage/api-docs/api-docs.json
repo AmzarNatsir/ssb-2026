@@ -297,127 +297,6 @@
                 ]
             }
         },
-        "/hrd/employee/dokument/{id}": {
-            "get": {
-                "tags": [
-                    "HRD"
-                ],
-                "summary": "Get employee documents by employee ID",
-                "operationId": "fe961d8c3db230bf1d179894f1c96c82",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Employee ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Unauthorized access"
-                    },
-                    "404": {
-                        "description": "Employee not found"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/hrd/recruitment/photo/{id}": {
-            "get": {
-                "tags": [
-                    "HRD"
-                ],
-                "summary": "Get recruitment applicant photo by applicant ID",
-                "operationId": "0418e9c5261ba40c05e021f6d1f93db3",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Applicant ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation"
-                    },
-                    "404": {
-                        "description": "Photo not found"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/hrd/recruitment/document/{id}": {
-            "get": {
-                "tags": [
-                    "HRD"
-                ],
-                "summary": "Get recruitment applicant document file by document ID",
-                "operationId": "94095483c33c2f573612a97f1d78eb91",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Recruitment document ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation"
-                    },
-                    "404": {
-                        "description": "Document not found"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/login": {
             "post": {
                 "tags": [
@@ -607,6 +486,149 @@
                     },
                     "404": {
                         "description": "File tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/media/hasil-evaluasi/{filename}": {
+            "get": {
+                "tags": [
+                    "Media"
+                ],
+                "summary": "Get file hasil evaluasi karyawan",
+                "description": "Mengambil file hasil evaluasi karyawan dari folder storage/app/public/hrd/hasil_evaluasi_karyawan. Memerlukan service token.",
+                "operationId": "ed1b595108c5e0ae498afd16d184bb6a",
+                "parameters": [
+                    {
+                        "name": "filename",
+                        "in": "path",
+                        "description": "Nama file hasil evaluasi (contoh: evaluasi_001.pdf)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "evaluasi_001.pdf"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File binary (pdf/image)"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "File tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/media/employee/dokument/{filename}": {
+            "get": {
+                "tags": [
+                    "Media"
+                ],
+                "summary": "Get employee document file by filename",
+                "description": "Mengambil file dokumen karyawan berdasarkan nama file. Memerlukan service token.",
+                "operationId": "31c55f210c73fc1b1503e0c081cd79a3",
+                "parameters": [
+                    {
+                        "name": "filename",
+                        "in": "path",
+                        "description": "Nama file dokumen karyawan (contoh: dokumen_001.pdf)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "dokumen_001.pdf"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File binary"
+                    },
+                    "404": {
+                        "description": "Document not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/media/recruitment/photo/{filename}": {
+            "get": {
+                "tags": [
+                    "Media"
+                ],
+                "summary": "Get recruitment applicant photo by filename",
+                "description": "Mengambil file foto pelamar berdasarkan nama file. Memerlukan service token.",
+                "operationId": "044a9fbd94ca2c056cc17dc1137a10c3",
+                "parameters": [
+                    {
+                        "name": "filename",
+                        "in": "path",
+                        "description": "Nama file foto pelamar (contoh: photo_001.jpg)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "photo_001.jpg"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Photo not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/media/recruitment/document/{filename}": {
+            "get": {
+                "tags": [
+                    "Media"
+                ],
+                "summary": "Get recruitment applicant document file by filename",
+                "description": "Mengambil file dokumen pelamar berdasarkan nama file. Memerlukan service token.",
+                "operationId": "c230644bcd0551bf03b8bef92e196de3",
+                "parameters": [
+                    {
+                        "name": "filename",
+                        "in": "path",
+                        "description": "Nama file dokumen pelamar (contoh: cv_001.pdf)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "cv_001.pdf"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Document not found"
                     }
                 },
                 "security": [
