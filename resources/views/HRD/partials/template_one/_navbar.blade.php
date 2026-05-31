@@ -2,9 +2,9 @@
     <div class="iq-navbar-custom">
        <div class="iq-sidebar-logo">
           <div class="top-logo">
-             <a href="index.html" class="logo">
+             <a href="{{ url('hrd/home') }}" class="logo">
              <img src="images/logo.png" class="img-fluid" alt="">
-             <span>Sofbox</span>
+             <span>HRDSSB</span>
              </a>
           </div>
        </div>
@@ -12,7 +12,7 @@
           <h5 class="mb-0">Dashboard</h5>
           <nav aria-label="breadcrumb">
              <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url('hrd/home') }}">Home</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Home</li>
              </ul>
           </nav>
@@ -29,12 +29,12 @@
              </div>
           </div>
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
-             <ul class="navbar-nav ml-auto navbar-list">
+             {{-- <ul class="navbar-nav ml-auto navbar-list">
                 <li class="nav-item">
                     {{ App\Helpers\Hrdhelper::get_notif_approval() }}
                 </li>
                 <li class="nav-item iq-full-screen"><a href="#" class="iq-waves-effect" id="btnFullscreen"><i class="ri-fullscreen-line"></i></a></li>
-             </ul>
+             </ul> --}}
           </div>
           <ul class="navbar-list">
              <li>
