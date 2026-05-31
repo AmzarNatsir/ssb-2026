@@ -15,6 +15,7 @@ use App\Models\HRD\PayrollHeaderModel;
 use App\Models\HRD\PayrollModel;
 use App\Models\HRD\PinjamanKaryawanModel;
 use App\Models\HRD\PotonganGajiKaryawanModel;
+use App\Models\HRD\RefApprovalDetailModel;
 use App\Services\PayrollImportValidator;
 use App\Traits\Payroll;
 use Barryvdh\DomPDF\PDF as DomPDFPDF;
@@ -36,6 +37,32 @@ class PenggajianController extends Controller
         $data['list_bulan'] = Config::get("constants.bulan");
         // $data['all_departemen'] = DepartemenModel::where('status', 1)->get();
         $data['PeriodePenggajian'] = PayrollHeaderModel::where('tahun', date('Y'))->orderby('bulan')->get();
+
+        $approvalMatrixByDept = RefApprovalDetailModel::with(['getPejabat.get_jabatan'])
+            ->where('approval_group', 12)
+            ->orderBy('approval_departemen')
+            ->orderBy('approval_level')
+            ->get()
+            ->groupBy('approval_departemen');
+
+        $departemenMap = DepartemenModel::select('id', 'nm_dept')
+            ->where('status', 1)
+            ->get()
+            ->keyBy('id');
+
+        $data['approvalMatrixGroup12'] = $approvalMatrixByDept->map(function ($details, $deptId) use ($departemenMap) {
+            $departemen = $departemenMap->get($deptId);
+            return [
+                'departemen' => $departemen ? $departemen->nm_dept : 'Departemen #' . $deptId,
+                'details' => $details,
+            ];
+        })->values();
+
+        $data['approvalMatrixGroup12TotalDepartemen'] = $approvalMatrixByDept->count();
+        $data['approvalMatrixGroup12TotalLevel'] = $approvalMatrixByDept->sum(function ($details) {
+            return $details->count();
+        });
+
         return view('HRD.penggajian.index', $data);
     }
     //step 1

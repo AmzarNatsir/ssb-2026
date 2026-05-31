@@ -44,7 +44,7 @@
     .badge-soft-success { background: #e7f9f3; color: #1cc88a; }
     .badge-soft-danger { background: #fdf2f2; color: #e74a3b; }
     .badge-soft-warning { background: #fffbf0; color: #f6c23e; }
-    
+
     .badge-modern {
         padding: 6px 12px;
         border-radius: 8px;
@@ -108,6 +108,35 @@
         box-shadow: 0 6px 20px rgba(28, 200, 138, 0.4);
     }
 
+    .approval-matrix-card {
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 8px 24px rgba(2, 6, 23, 0.06);
+        margin-bottom: 24px;
+    }
+
+    .approval-matrix-title {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 4px;
+    }
+
+    .approval-matrix-subtitle {
+        color: #64748b;
+        font-size: 0.85rem;
+    }
+
+    .approval-matrix-chain {
+        font-size: 0.82rem;
+        color: #475569;
+        line-height: 1.7;
+    }
+
+    .approval-matrix-chain strong {
+        color: #0f172a;
+    }
+
     @keyframes fadeInUp {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
@@ -166,6 +195,52 @@
     </div>
 </div>
 
+<div class="approval-matrix-card p-4">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3">
+        <div>
+            <h5 class="approval-matrix-title mb-1">
+                <i class="ri-git-branch-line text-primary mr-2"></i>Informasi Matriks Persetujuan
+            </h5>
+            <div class="approval-matrix-subtitle">Pengajuan Penggajian (Payroll)</div>
+        </div>
+        <div class="mt-3 mt-md-0 text-md-right">
+            <span class="badge badge-soft-primary badge-modern mr-1">Departemen Diatur: {{ $approvalMatrixGroup12TotalDepartemen }}</span>
+            <span class="badge badge-soft-success badge-modern">Total Level: {{ $approvalMatrixGroup12TotalLevel }}</span>
+        </div>
+    </div>
+
+    @if($approvalMatrixGroup12TotalDepartemen > 0)
+        <div class="row">
+            @foreach($approvalMatrixGroup12 as $matrix)
+            <div class="col-lg-6 mb-2">
+                <div class="approval-matrix-chain border rounded p-3 h-100" style="border-color:#e2e8f0 !important;">
+                    <strong>{{ $matrix['departemen'] }}</strong><br>
+                    @foreach($matrix['details'] as $detailIndex => $detail)
+                        L{{ $detail->approval_level }}: {{ optional($detail->getPejabat)->nm_lengkap ?? 'Pejabat tidak ditemukan' }}
+                        @if(!empty(optional(optional($detail->getPejabat)->get_jabatan)->nm_jabatan))
+                            ({{ optional(optional($detail->getPejabat)->get_jabatan)->nm_jabatan }})
+                        @endif
+                        @if(!$loop->last)
+                            <i class="ri-arrow-right-line text-muted mx-1"></i>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+            @endforeach
+        </div>
+    @else
+        <div class="alert badge-soft-warning mb-0 border-0">
+            Matriks persetujuan untuk group Pengajuan Penggajian (Payroll) belum diatur.
+        </div>
+    @endif
+
+    <div class="mt-3">
+        <a href="{{ url('hrd/setup/matriks_persetujuan_setup/12') }}" class="btn btn-outline-primary btn-sm">
+            <i class="ri-settings-3-line mr-1"></i>Buka Pengaturan Group Pengajuan Penggajian (Payroll)
+        </a>
+    </div>
+</div>
+
 <!-- Grid List -->
 <div class="row">
     @foreach ($PeriodePenggajian as $index => $item)
@@ -192,9 +267,6 @@
                             <a class="dropdown-item py-2" href="{{ url('hrd/penggajian/importPeriodePenggajian') }}">
                                 <i class="ri-upload-cloud-line mr-2 text-info"></i> Import Excel Data
                             </a>
-                            <a class="dropdown-item py-2 font-weight-bold" href="{{ url('hrd/penggajian/submitPenggajian/'.$item->bulan.'/'.$item->tahun.'/'.$item->approval_key) }}">
-                                <i class="ri-send-plane-line mr-2 text-warning"></i> Submit for Review
-                            </a>
                         @endif
                     </div>
                 </div>
@@ -208,7 +280,12 @@
                         <span class="badge-modern badge-soft-warning mb-2 d-inline-block"><i class="ri-time-line mr-1"></i> PENDING APPROVAL</span>
                         <div class="approver-tag">
                             <i class="ri-shield-user-line"></i>
-                            <span>{{ $item->get_current_approve->nm_lengkap }} ({{ $item->get_current_approve->get_jabatan->nm_jabatan }})</span>
+                            <span>
+                                {{ optional($item->get_current_approve)->nm_lengkap ?? 'Approver belum ditentukan' }}
+                                @if(!empty(optional(optional($item->get_current_approve)->get_jabatan)->nm_jabatan))
+                                    ({{ optional(optional($item->get_current_approve)->get_jabatan)->nm_jabatan }})
+                                @endif
+                            </span>
                         </div>
                     @elseif($item->status_pengajuan==2)
                         <span class="badge-modern badge-soft-success"><i class="ri-checkbox-circle-line mr-1"></i> APPROVED</span>
@@ -224,6 +301,15 @@
                 </a>
                 <small class="text-muted"><i class="ri-calendar-event-line"></i> {{ date('d M Y', strtotime($item->created_at)) }}</small>
             </div>
+
+            @if($item->is_draft==1 && empty($item->status_pengajuan))
+            <div class="mt-3">
+                <a class="btn btn-success btn-block font-weight-bold"
+                   href="{{ url('hrd/penggajian/submitPenggajian/'.$item->bulan.'/'.$item->tahun.'/'.$item->approval_key) }}">
+                    <i class="ri-send-plane-line mr-1"></i> Submit for Review
+                </a>
+            </div>
+            @endif
         </div>
     </div>
     @endforeach
@@ -279,7 +365,7 @@
         // Handle Add Period Form Submission
         $('#form_periode').submit(function (e) {
             e.preventDefault();
-            
+
             Swal.fire({
                 title: "Konfirmasi Periode",
                 text: "Apakah Anda yakin ingin membuat periode penggajian baru ini?",
@@ -292,7 +378,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $('#btn-submit').prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i> Processing...');
-                    
+
                     $.ajax({
                         url: "{{ url('hrd/penggajian/simpanPeriodePenggajian') }}",
                         type: "POST",
