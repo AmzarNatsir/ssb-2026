@@ -500,4 +500,74 @@ class PelaporanController extends Controller
         }
         return view('HRD.pelaporan.pinjaman_karyawan.result_filter', $data);
     }
+
+    /**
+     * Verify Cuti (Leave) document authenticity
+     *
+     * @param int $id Cuti record ID
+     * @return \Illuminate\View\View|\Illuminate\Http\Response
+     */
+    public function verifyCuti($id)
+    {
+        try {
+            // Retrieve Cuti data with required relationships
+            $cutiRecord = CutiModel::with([
+                'profil_karyawan',
+                'get_jenis_cuti',
+                'get_current_approve',
+                'get_current_approve.get_jabatan'
+            ])->find($id);
+
+            // Return 404 if record doesn't exist
+            if (!$cutiRecord) {
+                \Illuminate\Support\Facades\Log::warning('Cuti Verification Failed: Document not found', [
+                    'requested_id' => $id,
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent()
+                ]);
+                abort(404, 'Cuti document not found');
+            }
+
+            // Return 404 if record is inactive (no document number means not processed/active)
+            if (empty($cutiRecord->nomor_surat)) {
+                \Illuminate\Support\Facades\Log::warning('Cuti Verification Failed: Document is inactive or draft', [
+                    'requested_id' => $id,
+                    'nomor_surat' => $cutiRecord->nomor_surat,
+                    'employee' => $cutiRecord->profil_karyawan->nm_lengkap ?? 'N/A',
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent()
+                ]);
+                abort(404, 'Cuti document not found');
+            }
+
+            // Log successful verification attempt
+            \Illuminate\Support\Facades\Log::info('Cuti Verification Successful', [
+                'requested_id' => $id,
+                'nomor_surat' => $cutiRecord->nomor_surat,
+                'employee' => $cutiRecord->profil_karyawan->nm_lengkap ?? 'N/A',
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent()
+            ]);
+
+            // Prepare data for verification view
+            $data = [
+                'dt' => $cutiRecord,
+                'document_type' => 'Cuti',
+                'verification_status' => 'verified'
+            ];
+
+            return view('HRD.verify.cuti_verify', $data);
+
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Illuminate\Support\Facades\Log::error('Cuti Verification Error: ' . $e->getMessage(), [
+                'id' => $id,
+                'ip_address' => request()->ip(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Return 404 for any other errors to avoid exposing system information
+            abort(404, 'Cuti document not found');
+        }
+    }
 }
