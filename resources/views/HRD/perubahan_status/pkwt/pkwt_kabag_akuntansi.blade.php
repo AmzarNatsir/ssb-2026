@@ -394,12 +394,31 @@
     </tr>
     <tr><td colspan="4" style="height: 30px;"></td></tr>
 </table>
+@php
+    try {
+        $verifyUrl = route('hrd.verify.pkwt', ['id' => $dt_status->id]);
+        $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+            ->size(80)
+            ->errorCorrection('H')
+            ->generate($verifyUrl);
+        $qrBase64 = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
+    } catch (\Exception $e) {
+        $qrBase64 = null;
+    }
+@endphp
 <table style="width: 100%;" class="isi">
 <tr>
     <td style="width: 50%;">Pihak Pertama</td>
     <td style="width: 50%;">Pihak Kedua</td>
 </tr>
-<tr><td colspan="2" style="height: 50px;"></td></tr>
+<tr>
+    <td style="height: 80px; vertical-align: middle;">
+        @if($qrBase64)<img src="{{ $qrBase64 }}" width="80" height="80" alt="QR Verifikasi PKWT" title="Scan untuk verifikasi dokumen">@endif
+    </td>
+    <td style="height: 80px; vertical-align: middle;">
+        @if($qrBase64)<img src="{{ $qrBase64 }}" width="80" height="80" alt="QR Verifikasi PKWT" title="Scan untuk verifikasi dokumen">@endif
+    </td>
+</tr>
 <tr>
     <td><b><u>{{ $dt_status->get_current_approve->nm_lengkap }}</u></b><br><b>{{ $dt_status->get_current_approve->get_jabatan->nm_jabatan }}</b></td>
     <td><b><u>{{ $dt_status->get_profil->nm_lengkap }}</u></b></td>

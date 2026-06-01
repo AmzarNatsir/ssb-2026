@@ -980,3 +980,6 @@ Route::group(['middleware' => 'auth'], function()
         Route::get('printSKK/{id}', 'Hrd\ResignController@print_skk');
     });
 });
+
+// Public verification routes (no authentication required)
+Route::get('verify/pkwt/{id}', 'Hrd\PerubahanStatusController@verifyPkwt')->name('hrd.verify.pkwt');

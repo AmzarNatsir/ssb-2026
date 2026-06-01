@@ -55,7 +55,7 @@ $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
         <table width="100%">
             <tr>
                 <td align="left" style="width: 50%;">
-                <img src="{{ url(Storage::url('logo_perusahaan/'.$fl_logo)) }}" alt="Logo" width="100px" width="auto" class="logo"/>
+                <img src="{{ url(Storage::url('logo_perusahaan/'.$logo)) }}" alt="Logo" width="100px" width="auto" class="logo"/>
                 </td>
                 <td align="right" style="width: 50%;">
                     <h2>PT. SUMBER SETIA BUDI</h2>

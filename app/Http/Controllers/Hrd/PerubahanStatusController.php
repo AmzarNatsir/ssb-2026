@@ -13,10 +13,12 @@ use PDF;
 use App\Helpers\Hrdhelper as hrdfunction;
 use App\Models\HRD\ApprovalModel;
 use App\Models\HRD\JabatanModel;
+use App\Traits\General;
 use App\Traits\SubmissionHrd;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Log;
 
 
 class PerubahanStatusController extends Controller
@@ -30,10 +32,14 @@ class PerubahanStatusController extends Controller
         $day30 = date('Y-m-d', strtotime($toDay . ' +30 day'));
         // $data['list_bulan'] = Config::get("constants.bulan");
         // $data['list_departemen'] = DepartemenModel::where('status', 1)->get();
-        $data['list_jtp_hari_ini'] = KaryawanModel::where('tgl_sts_efektif_akhir', $toDay)->whereIn('id_status_karyawan', [1, 2])->get();
+
+        $monitoring = $this->get_data_monitoring('duetoday');
+        $data['list_jtp_hari_ini'] = $monitoring['list'];
+        $data['keterangan_default'] = $monitoring['keterangan'];
+
         $data['list_pengajuan'] = PerubahanStatusModel::whereIn('status_pengajuan', [1, 2])
                                 ->whereNull('no_surat')->get();
-        $data['dueDay'] = KaryawanModel::where('tgl_sts_efektif_akhir', $toDay)->whereIn('id_status_karyawan', [1, 2])->get()->count();
+        $data['dueDay'] = KaryawanModel::whereDate('tgl_sts_efektif_akhir', $toDay)->whereIn('id_status_karyawan', [1, 2])->get()->count();
         $data['dueThisMonth'] = KaryawanModel::whereMonth('tgl_sts_efektif_akhir', date('m'))
                 ->whereYear('tgl_sts_efektif_akhir', date('Y'))
                 ->whereIn('id_status_karyawan', [1, 2])->get()->count();
@@ -52,27 +58,37 @@ class PerubahanStatusController extends Controller
     }
     public function filter_data(Request $request)
     {
-        $toDay = date("Y-m-d");
-        $day30 = date('Y-m-d', strtotime($toDay . ' +30 day'));
-        $kategori = $request->kategori;
-        if($kategori=='duetoday') {
-            $keterangan = hrdfunction::get_hari_ini($toDay).', '.date('d').' '.hrdfunction::get_nama_bulan(date('m')). ' '.date('Y');
-            $result = KaryawanModel::where('tgl_sts_efektif_akhir', $toDay)->whereIn('id_status_karyawan', [1, 2])->get();
-        } elseif($kategori=='duethismonth') {
-            $keterangan = hrdfunction::get_nama_bulan(date('m')). ' '.date('Y');
-            $result = KaryawanModel::whereMonth('tgl_sts_efektif_akhir', date('m'))
-                ->whereYear('tgl_sts_efektif_akhir', date('Y'))
-                ->whereIn('id_status_karyawan', [1, 2])->get();
-        } else {
-            $keterangan = "30 hari kedepan";
-            $result = KaryawanModel::whereBetween('tgl_sts_efektif_akhir', [$toDay, $day30])
-                ->whereIn('id_status_karyawan', [1, 2])->get();
-        }
+        $monitoring = $this->get_data_monitoring($request->kategori);
         $data = [
-            'list' => $result,
-            'keterangan' => $keterangan
+            'list' => $monitoring['list'],
+            'keterangan' => $monitoring['keterangan']
         ];
         return view('HRD.perubahan_status.status_karyawan', $data);
+    }
+
+    private function get_data_monitoring($kategori)
+    {
+        $toDay = date("Y-m-d");
+        $day30 = date('Y-m-d', strtotime($toDay . ' +30 day'));
+
+        $query = KaryawanModel::whereIn('id_status_karyawan', [1, 2]);
+
+        if($kategori == 'duetoday') {
+            $query->whereDate('tgl_sts_efektif_akhir', $toDay);
+            $keterangan = hrdfunction::get_hari_ini($toDay).', '.date('d').' '.hrdfunction::get_nama_bulan(date('m')). ' '.date('Y');
+        } elseif($kategori == 'duethismonth') {
+            $query->whereMonth('tgl_sts_efektif_akhir', date('m'))
+                  ->whereYear('tgl_sts_efektif_akhir', date('Y'));
+            $keterangan = hrdfunction::get_nama_bulan(date('m')). ' '.date('Y');
+        } else {
+            $query->whereBetween('tgl_sts_efektif_akhir', [$toDay, $day30]);
+            $keterangan = "30 hari kedepan";
+        }
+
+        return [
+            'list' => $query->get(),
+            'keterangan' => $keterangan,
+        ];
     }
 
     public function baru()
@@ -164,7 +180,6 @@ class PerubahanStatusController extends Controller
             'get_profil.get_jabatan',
             'get_current_approve'])->find($id_data);
         $kop_surat = hrdfunction::get_kop_surat();
-
         $id_status = (empty($result->id_sts_baru)) ? "" : $result->id_sts_baru;
 
         $temp_pkwt = $result->get_profil->get_jabatan->file_pkwt;
@@ -178,7 +193,7 @@ class PerubahanStatusController extends Controller
             $pdf = PDF::loadview('HRD.perubahan_status.pkwt.'.$temp_pkwt, [
                 'dt_status' => $result,
                 'list_agama'=> $all_agama,
-                'kop_surat' => $kop_surat
+                'kop_surat' => $kop_surat,
             ])->setPaper('A4', 'potrait');
         }
         // if($id_status<=2 || $id_status==7)
@@ -312,6 +327,22 @@ class PerubahanStatusController extends Controller
             'get_jabatan',
             'get_departemen'
         ])->find($id);
+
+        if (empty($data['profil'])) {
+            $pengajuan = PerubahanStatusModel::with([
+                'get_profil.get_jabatan',
+                'get_profil.get_departemen'
+            ])->find($id);
+
+            if (!empty($pengajuan) && !empty($pengajuan->get_profil)) {
+                $data['profil'] = $pengajuan->get_profil;
+            }
+        }
+
+        if (empty($data['profil'])) {
+            abort(404, 'Data karyawan tidak ditemukan');
+        }
+
         $data['list_status'] = Config::get('constants.status_karyawan');
         return view('HRD.perubahan_status.pengajuan.add', $data);
     }
@@ -412,5 +443,74 @@ class PerubahanStatusController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="'.$pathToFile.'"'
         ]);
+    }
+
+    /**
+     * Verify PKWT document authenticity
+     *
+     * @param int $id PKWT record ID
+     * @return \Illuminate\View\View|\Illuminate\Http\Response
+     */
+    public function verifyPkwt($id)
+    {
+        try {
+            // Retrieve PKWT data with required relationships
+            $pkwtRecord = PerubahanStatusModel::with([
+                'get_profil',
+                'get_current_approve',
+                'get_current_approve.get_jabatan'
+            ])->find($id);
+
+            // Return 404 if record doesn't exist
+            if (!$pkwtRecord) {
+                Log::warning('PKWT Verification Failed: Document not found', [
+                    'requested_id' => $id,
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent()
+                ]);
+                abort(404, 'PKWT document not found');
+            }
+
+            // Return 404 if record is inactive (no document number means not processed/active)
+            if (empty($pkwtRecord->no_surat)) {
+                Log::warning('PKWT Verification Failed: Document is inactive or draft', [
+                    'requested_id' => $id,
+                    'no_surat' => $pkwtRecord->no_surat,
+                    'employee' => $pkwtRecord->get_profil->nm_lengkap ?? 'N/A',
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent()
+                ]);
+                abort(404, 'PKWT document not found');
+            }
+
+            // Log successful verification attempt
+            Log::info('PKWT Verification Successful', [
+                'requested_id' => $id,
+                'no_surat' => $pkwtRecord->no_surat,
+                'employee' => $pkwtRecord->get_profil->nm_lengkap ?? 'N/A',
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent()
+            ]);
+
+            // Prepare data for verification view
+            $data = [
+                'dt_status' => $pkwtRecord,
+                'document_type' => 'PKWT',
+                'verification_status' => 'verified'
+            ];
+
+            return view('HRD.verify.pkwt_verify', $data);
+
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error('PKWT Verification Error: ' . $e->getMessage(), [
+                'id' => $id,
+                'ip_address' => request()->ip(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Return 404 for any other errors to avoid exposing system information
+            abort(404, 'PKWT document not found');
+        }
     }
 }

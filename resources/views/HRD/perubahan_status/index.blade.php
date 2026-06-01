@@ -1,34 +1,164 @@
 @extends('HRD.layouts.master')
+
 @section('content')
 <style>
     .spinner-div {
-    position: absolute;
-    display: none;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    text-align: center;
-    background-color: rgba(255, 255, 255, 0.8);
-    z-index: 2;
+        position: absolute;
+        display: none;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.8);
+        z-index: 2;
+    }
+    .monitoring-shell {
+        padding: 0 8px 8px;
+    }
+    .monitoring-card {
+        border: 1px solid #e8edf3;
+        border-radius: 14px;
+        padding: 14px 16px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(31, 45, 61, 0.05);
+        margin-bottom: 12px;
+    }
+    .monitoring-card:last-child {
+        margin-bottom: 0;
+    }
+    .monitoring-avatar {
+        width: 74px;
+        height: 74px;
+        object-fit: cover;
+    }
+    .monitoring-name {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    .monitoring-job {
+        color: #6c757d;
+        margin-bottom: 0;
+        font-size: 13px;
+    }
+    .monitoring-status {
+        margin-bottom: 6px;
+        font-size: 14px;
+    }
+    .monitoring-period {
+        margin-bottom: 0;
+        font-size: 14px;
+    }
+    .monitoring-action {
+        min-width: 140px;
+    }
+    .pengajuan-shell {
+        max-height: 76vh;
+        overflow-y: auto;
+        padding: 0 8px 8px;
+    }
+    .pengajuan-card {
+        border: 1px solid #e8edf3;
+        border-radius: 14px;
+        background: #fff;
+        padding: 14px;
+        box-shadow: 0 2px 8px rgba(31, 45, 61, 0.05);
+        margin-bottom: 12px;
+    }
+    .pengajuan-card:last-child {
+        margin-bottom: 0;
+    }
+    .pengajuan-name {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+    .pengajuan-meta {
+        color: #6c757d;
+        font-size: 12px;
+        margin-bottom: 0;
+    }
+    .pengajuan-block {
+        margin-top: 10px;
+    }
+    .pengajuan-table {
+        width: 100%;
+        margin-top: 8px;
+    }
+    .pengajuan-table td {
+        padding: 4px 0;
+        vertical-align: top;
+        font-size: 13px;
+    }
+    .pengajuan-table td:first-child {
+        color: #6c757d;
+        width: 40%;
+    }
+    .pengajuan-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .pengajuan-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .pengajuan-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+    .pengajuan-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .pengajuan-avatar {
+        width: 54px;
+        height: 54px;
+        object-fit: cover;
+    }
+    .pengajuan-actions .btn {
+        margin-top: 8px;
+    }
+    @media (max-width: 767.98px) {
+        .monitoring-card {
+            padding: 12px;
+        }
+        .monitoring-avatar {
+            width: 58px;
+            height: 58px;
+        }
+        .monitoring-name {
+            font-size: 16px;
+        }
+        .monitoring-action {
+            min-width: 100%;
+        }
+        .pengajuan-shell {
+            max-height: none;
+        }
     }
 </style>
+
 <div class="navbar-breadcrumb">
     <nav aria-label="breadcrumb">
         <ul class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url('hrd/home') }}">Home</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Perubahan Status</li>
-        <li class="breadcrumb-item"><a href="{{ url('hrd/perubahanstatus') }}">Refresh (F5)</a></li>
+            <li class="breadcrumb-item"><a href="{{ url('hrd/home') }}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Perubahan Status</li>
+            <li class="breadcrumb-item"><a href="{{ url('hrd/perubahanstatus') }}">Refresh (F5)</a></li>
         </ul>
     </nav>
 </div>
+
 <div class="row">
-    @if(\Session::has('konfirm'))
+    @if(Session::has('konfirm'))
         <div class="alert text-white bg-success" role="alert" id="success-alert">
             <div class="iq-alert-icon">
                 <i class="ri-alert-line"></i>
             </div>
-            <div class="iq-alert-text">{{ \Session::get('konfirm') }}</div>
+            <div class="iq-alert-text">{{ Session::get('konfirm') }}</div>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <i class="ri-close-line"></i>
             </button>
@@ -37,213 +167,161 @@
     @include('HRD.perubahan_status.summary_status')
     @include('HRD.perubahan_status.remainder')
 </div>
+
 <div class="row">
-    <div class="col-lg-9">
+    <div class="col-lg-8">
         <div class="iq-card">
-            <div id="spinner-div" class="pt-5 justify-content-center spinner-div"><div class="spinner-border text-primary" role="status"></div></div>
+            <div id="spinner-div" class="pt-5 justify-content-center spinner-div">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
             <div id="view_data">
-                <div class="iq-card-header d-flex justify-content-between">
-                    <div class="iq-header-title">
-                        <h4 class="card-title">Monitoring PKWT Jatuh Tempo <b class="ketView">{{ \App\Helpers\Hrdhelper::get_hari_ini(date('d-m-Y')).', '.date('d').' '.\App\Helpers\Hrdhelper::get_nama_bulan(date('m')). ' '.date('Y') }}</b></h4>
-                    </div>
-                </div>
-                <div class="iq-card-body">
-                    <div class="row">
-                        @if(count($list_jtp_hari_ini)==0)
-                            <div class="col-lg-12">
-                                <div class="alert text-white bg-secondary" role="alert">
-                                    <div class="iq-alert-text">No matching records found !</div>
-                                </div>
-                            </div>
-                        @else
-                            <div class="col-lg-12">
-                                <table class="table" style="width:100%">
-                                    <tbody>
-                                        @php($nom=1)
-                                        @foreach($list_jtp_hari_ini as $list)
-                                        <tr>
-                                            <td style="width: 10%">
-                                                @if(!empty($list->photo))
-                                                <img src="{{ url(Storage::url('hrd/photo/'.$list->photo)) }}"
-                                                    class="rounded-circle" alt="avatar" style="width: 80px; height: auto;">
-                                                @else
-                                                <a href="{{ asset('assets/images/user/1.jpg') }}" data-fancybox data-caption="avatar">
-                                                <img src="{{ asset('assets/images/user/1.jpg') }}"
-                                                    class="rounded-circle" alt="avatar" style="width: 80px; height: auto;"></a>
-                                                @endif
-                                            </td>
-                                            <td style="width: 40%">
-                                                <h4 class="mb-0">{{ $list->nm_lengkap }}</h4>
-                                                <h6 class="mb-0">{{ (empty($list->get_jabatan->nm_jabatan)) ? "" : $list->get_jabatan->nm_jabatan }} | {{ $list->get_departemen->nm_dept }}</h6>
-                                            </td>
-                                            <td style="width: 40%">
-                                                <h4 class="mb-0">Status Karyawan : {{ $list->get_status_karyawan($list->id_status_karyawan) }}</h4>
-                                                <h6 class="mb-0">
-                                                    PKWT Efektif Mulai : <span class="text-success">{{ date_format(date_create($list->tgl_sts_efektif_mulai), 'd-m-Y') }}</span> s/d <span class="text-danger">{{ date_format(date_create($list->tgl_sts_efektif_akhir), 'd-m-Y') }}</span></h6>
-                                                </h6>
-                                            </td>
-                                            <td style="width: 10%; vertical-align: middle">
-                                                <button type="button" name="tbl_rubah_status" id="{{ \App\Helpers\Hrdhelper::encrypt_decrypt('encrypt', $list->id) }}" class="btn btn-primary btn-block" onClick="prosesPerubahanStatus(this);">Proses</button>
-                                            </td>
-                                        </tr>
-                                        @php($nom++)
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @endif
-                    </div>
-                </div>
+                @include('HRD.perubahan_status.status_karyawan', ['list' => $list_jtp_hari_ini, 'keterangan' => $keterangan_default])
             </div>
         </div>
     </div>
-    <div class="col-lg-3">
-        <div class="iq-right-fixed rounded iq-card iq-card iq-card-block iq-card-stretch iq-card-height">
-            <div class="iq-card-header d-flex justify-content-between">
+    <div class="col-lg-4">
+        <div class="iq-right-fixed rounded iq-card iq-card-block iq-card-stretch iq-card-height">
+            <div class="iq-card-header d-flex justify-content-between align-items-center">
                 <div class="iq-header-title">
-                    <h4 class="card-title">List Pengajuan</h4>
+                    <h4 class="card-title mb-0">List Pengajuan</h4>
                 </div>
+                <span class="badge badge-primary">{{ count($list_pengajuan) }}</span>
             </div>
-            <div class="iq-card-body" style="overflow-y: auto;">
-                <div class="owl-carousel"  data-autoplay="true" data-loop="true" data-nav="false" data-dots="true" data-items="1" data-items-laptop="1" data-items-tab="1" data-items-mobile="1" data-items-mobile-sm="1" data-margin="30">
+            <div class="iq-card-body pengajuan-shell">
+                @if(count($list_pengajuan) == 0)
+                    <div class="alert alert-light mb-0 text-center">
+                        Belum ada pengajuan.
+                    </div>
+                @else
                     @foreach($list_pengajuan as $list)
-                    <div class="item">
-                        <ul class="iq-timeline">
-                            <li>
-                                <div class="timeline-dots border-success"></div>
-                                <h6 class="float-left mb-1">{{ $list->get_profil->nm_lengkap }}</h6>
-                                <small class="float-right mt-1">{{ date_format(date_create($list->tgl_pengajuan), 'd-m-Y') }}</small>
-                                <div class="d-inline-block w-100">
-                                    <p><i>{{ (empty($list->get_profil->get_jabatan->nm_jabatan)) ? "" : $list->get_profil->get_jabatan->nm_jabatan. ' | ' .$list->get_profil->get_departemen->nm_dept}}</i></p>
-                                    <table class="table table-sm" style="width: 100%">
-                                        <tr>
-                                            <td style="width: 50%">Efektif</td>
-                                            <td>Berakhir</td>
-                                        </tr>
-                                        <tr>
-                                            <td>{{ date_format(date_create($list->tgl_eff_lama), 'd-m-Y') }}</td>
-                                            <td>{{ date_format(date_create($list->tgl_akh_lama), 'd-m-Y') }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Saat ini</td>
-                                            <td>Usulan</td>
-                                        </tr>
-                                        <tr>
-                                            <td><span class="badge badge-primary">{{ $list->get_status_karyawan($list->id_sts_baru) }}</span></td>
-                                            <td><span class="badge badge-success">{{ $list->get_status_karyawan($list->id_sts_lama) }}</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">@if($list->status_pengajuan==1)
-                                                <span class="badge badge-pill badge-danger">Menunggu Persetujuan : {{ $list->get_current_approve->nm_lengkap }}</span>
-                                                <span class="badge badge-pill badge-danger">{{ $list->get_current_approve->get_jabatan->nm_jabatan }}</span>
-                                            @elseif($list->status_pengajuan==2)
-                                                <span class="badge badge-success badge-block"><i class="fa fa-check"></i> Pengajuan Disetujui</span>
-                                            @else
-                                                <span class="badge badge-danger"><i class="fa fa-times"></i> Pengajuan Ditolak</span>
-                                            @endif</td>
-                                        </tr>
-                                    </table>
-                                    <button type="button" class="btn btn-danger btn-block" data-toggle="modal" data-target="#modalDetailPengajuan" onclick="goDetail(this)" value="{{ $list->id }}">Detail</button>
-                                    @if($list->status_pengajuan==2)
-                                    <button type="button" class="btn btn-primary btn-block" data-toggle="modal" data-target="#modalFormProses" value="{{ $list->id }}" onclick="goForm(this)"><i class='ri-pencil-line'></i> Registrasi</button>
+                        <div class="pengajuan-card">
+                            <div class="d-flex align-items-start">
+                                <div class="mr-3 flex-shrink-0">
+                                    @if(!empty($list->get_profil->photo))
+                                        <img src="{{ url(Storage::url('hrd/photo/'.$list->get_profil->photo)) }}" class="rounded-circle pengajuan-avatar" alt="avatar">
+                                    @else
+                                        <img src="{{ asset('assets/images/user/1.jpg') }}" class="rounded-circle pengajuan-avatar" alt="avatar">
                                     @endif
                                 </div>
-                            </li>
-                        </ul>
-                    </div>
-                    @endforeach
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="pengajuan-name">{{ $list->get_profil->nm_lengkap }}</div>
+                                            <p class="pengajuan-meta">{{ date_format(date_create($list->tgl_pengajuan), 'd-m-Y') }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="pengajuan-meta mb-2">
+                                        {{ (empty($list->get_profil->get_jabatan->nm_jabatan)) ? '-' : $list->get_profil->get_jabatan->nm_jabatan }} | {{ $list->get_profil->get_departemen->nm_dept }}
+                                    </div>
+                                </div>
+                            </div>
 
-                </div>
+                            <div class="pengajuan-block">
+                                <table class="pengajuan-table">
+                                    <tr>
+                                        <td>Periode Lama</td>
+                                        <td>
+                                            {{ date_format(date_create($list->tgl_eff_lama), 'd-m-Y') }}
+                                            s/d
+                                            {{ date_format(date_create($list->tgl_akh_lama), 'd-m-Y') }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Status Saat Ini</td>
+                                        <td><span class="badge badge-primary">{{ $list->get_status_karyawan($list->id_sts_lama) }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Status Usulan</td>
+                                        <td><span class="badge badge-success">{{ $list->get_status_karyawan($list->id_sts_baru) }}</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <div class="mt-2">
+                                @if($list->status_pengajuan==1)
+                                    <span class="pengajuan-status pengajuan-pending">Menunggu Persetujuan</span>
+                                    <div class="pengajuan-meta mt-1">
+                                        {{ optional($list->get_current_approve)->nm_lengkap }}
+                                        @if(optional(optional($list->get_current_approve)->get_jabatan)->nm_jabatan)
+                                            - {{ optional(optional($list->get_current_approve)->get_jabatan)->nm_jabatan }}
+                                        @endif
+                                    </div>
+                                @elseif($list->status_pengajuan==2)
+                                    <span class="pengajuan-status pengajuan-approved">Pengajuan Disetujui</span>
+                                @else
+                                    <span class="pengajuan-status pengajuan-rejected">Pengajuan Ditolak</span>
+                                @endif
+                            </div>
+
+                            <div class="pengajuan-actions">
+                                <button type="button" class="btn btn-outline-danger btn-block btn-sm" data-toggle="modal" data-target="#modalDetailPengajuan" onclick="goDetail(this)" value="{{ $list->id }}">Detail</button>
+                                @if($list->status_pengajuan==2)
+                                    <button type="button" class="btn btn-primary btn-block btn-sm" data-toggle="modal" data-target="#modalFormProses" value="{{ $list->id }}" onclick="goForm(this)"><i class='ri-pencil-line'></i> Registrasi {{ $list->id }}</button>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
             </div>
         </div>
     </div>
 </div>
+
 <div id="modalFormProses" class="modal fade bg-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenteredScrollableTitle" aria-hidden="true" data-backdrop="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content" id="v_inputan" style="overflow-y: auto;"></div>
     </div>
- </div>
- <div id="modalDetailPengajuan" class="modal fade bg-modal" role="dialog" aria-labelledby="exampleModalCenteredScrollableTitle" aria-hidden="true" data-backdrop="false">
+</div>
+
+<div id="modalDetailPengajuan" class="modal fade bg-modal" role="dialog" aria-labelledby="exampleModalCenteredScrollableTitle" aria-hidden="true" data-backdrop="false">
     <div class="modal-dialog modal-dialog-scrollable modal-xl">
         <div class="modal-content" id="v_detail" style="overflow-y: auto;"></div>
     </div>
- </div>
+</div>
+
 <script type="text/javascript">
-    $(document).ready(function()
-    {
+    $(document).ready(function () {
         $('#spinner-div').hide();
-        $(".select2").select2();
-        $('.datatable').DataTable({
-            searchDelay: 500,
-            processing: true,
-        });
-        window.setTimeout(function () { $("#success-alert").alert('close'); }, 2000);
+        window.setTimeout(function () {
+            $('#success-alert').alert('close');
+        }, 2000);
     });
-    var getDataDept = function()
-    {
-        $('#spinner-div').show();
-        var bulan = $("#pil_bulan").val();
-        var tahun = $("#inp_tahun").val();
-        var id_dept = $("#pil_dept").val();
-        $.ajax({
-            type : "post",
-            url : "{{ url('hrd/perubahanstatus/filterdata') }}",
-            headers : {
-                'X-CSRF-TOKEN' : '<?php echo csrf_token() ?>'
-            },
-            data : {id_dept:id_dept, bulan:bulan, tahun:tahun},
-            beforeSend : function()
-            {
-                $('#spinner-div').show();
-            },
-            success : function(respond)
-            {
-                $("#view_data").html(respond);
-                //$('#datatable').DataTable();
-                $('#spinner-div').hide();
-            }
-        });
-    }
-    var prosesPerubahanStatus = function(el)
-    {
-        var id_karyawan = el.id;
-        window.location.assign("{{ url('hrd/perubahanstatus/baru') }}/"+id_karyawan);
-    }
-    var goForm = function(el)
-    {
+
+    var goForm = function (el) {
         $('#spinner-div').show();
         var id_data = $(el).val();
-        $("#v_inputan").load("{{ url('hrd/perubahanstatus/form_proses') }}/"+id_data, function(){
+        $('#v_inputan').load("{{ url('hrd/perubahanstatus/form_proses') }}/" + id_data, function () {
             $('#spinner-div').hide();
         });
-    }
-    var goDetail = function(el)
-    {
+    };
+
+    var goDetail = function (el) {
         var id_data = $(el).val();
-        $("#v_detail").load("{{ url('hrd/perubahanstatus/detail_pengajuan') }}/"+id_data);
-    }
-    var showData = function(el)
-    {
+        $('#v_detail').load("{{ url('hrd/perubahanstatus/detail_pengajuan') }}/" + id_data);
+    };
+
+    var showData = function (el) {
         $('#spinner-div').show();
         var kategori = $(el).val();
+
         $.ajax({
-            type : "post",
-            url : "{{ url('hrd/perubahanstatus/filterdata') }}",
-            headers : {
-                'X-CSRF-TOKEN' : '<?php echo csrf_token() ?>'
+            type: 'post',
+            url: "{{ url('hrd/perubahanstatus/filterdata') }}",
+            headers: {
+                'X-CSRF-TOKEN': '<?php echo csrf_token() ?>'
             },
-            data : {kategori:kategori},
-            beforeSend : function()
-            {
+            data: { kategori: kategori },
+            beforeSend: function () {
                 $('#spinner-div').show();
             },
-            success : function(respond)
-            {
-                $("#view_data").html(respond);
-                //$('#datatable').DataTable();
+            success: function (respond) {
+                $('#view_data').html(respond);
+                $('#spinner-div').hide();
+            },
+            error: function () {
                 $('#spinner-div').hide();
             }
         });
-    }
+    };
 </script>
 @endsection
