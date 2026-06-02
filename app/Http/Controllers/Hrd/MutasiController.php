@@ -589,4 +589,76 @@ class MutasiController extends Controller
         }
     }
 
+    /**
+     * Verify Mutasi document authenticity
+     *
+     * @param int $id Mutasi record ID
+     * @return \Illuminate\View\View|\Illuminate\Http\Response
+     */
+    public function verifyMutasi($id)
+    {
+        try {
+            // Retrieve Mutasi data with required relationships
+            $mutasiRecord = MutasiModel::with([
+                'get_profil',
+                'get_dept_lama',
+                'get_jabatan_lama',
+                'get_dept_baru',
+                'get_jabatan_baru',
+                'get_current_approve',
+                'get_current_approve.get_jabatan'
+            ])->find($id);
+
+            // Return 404 if record doesn't exist
+            if (!$mutasiRecord) {
+                \Illuminate\Support\Facades\Log::warning('Mutasi Verification Failed: Document not found', [
+                    'requested_id' => $id,
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent()
+                ]);
+                abort(404, 'Mutasi document not found');
+            }
+
+            // Return 404 if record is inactive (no document number means not processed/active)
+            if (empty($mutasiRecord->no_surat)) {
+                \Illuminate\Support\Facades\Log::warning('Mutasi Verification Failed: Document is inactive or draft', [
+                    'requested_id' => $id,
+                    'no_surat' => $mutasiRecord->no_surat,
+                    'employee' => $mutasiRecord->get_profil->nm_lengkap ?? 'N/A',
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent()
+                ]);
+                abort(404, 'Mutasi document not found');
+            }
+
+            // Log successful verification attempt
+            \Illuminate\Support\Facades\Log::info('Mutasi Verification Successful', [
+                'requested_id' => $id,
+                'no_surat' => $mutasiRecord->no_surat,
+                'employee' => $mutasiRecord->get_profil->nm_lengkap ?? 'N/A',
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent()
+            ]);
+
+            // Prepare data for verification view
+            $data = [
+                'dt' => $mutasiRecord,
+                'document_type' => 'Mutasi',
+                'verification_status' => 'verified'
+            ];
+
+            return view('HRD.verify.mutasi_verify', $data);
+
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Illuminate\Support\Facades\Log::error('Mutasi Verification Error: ' . $e->getMessage(), [
+                'id' => $id,
+                'ip_address' => request()->ip(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Return 404 for any other errors to avoid exposing system information
+            abort(404, 'Mutasi document not found');
+        }
+    }
 }

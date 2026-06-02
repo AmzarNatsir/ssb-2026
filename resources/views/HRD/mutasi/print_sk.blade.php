@@ -1,5 +1,15 @@
 @php
 $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
+try {
+    $verifyUrl = route('hrd.verify.mutasi', ['id' => $result->id]);
+    $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+        ->size(80)
+        ->errorCorrection('H')
+        ->generate($verifyUrl);
+    $qrBase64 = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
+} catch (\Exception $e) {
+    $qrBase64 = null;
+}
 @endphp
 <!DOCTYPE html>
  <html lang="en">
@@ -152,7 +162,12 @@ $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
         <td style="width: 50%;"></td>
         <td style="width: 50%;">Pomalaa, {{ date_format(date_create($result->tgl_surat), 'd') }} {{ \App\Helpers\Hrdhelper::get_nama_bulan(date_format(date_create($result->tgl_eff_baru), 'm')) }} {{ date_format(date_create($result->tgl_eff_baru), 'Y') }}</td>
     </tr>
-    <tr><td style="height: 60px;"></td></tr>
+    <tr>
+        <td></td>
+        <td style="height: 80px; vertical-align: middle;">
+            @if($qrBase64)<img src="{{ $qrBase64 }}" width="80" height="80" alt="QR Verifikasi Mutasi" title="Scan untuk verifikasi dokumen">@endif
+        </td>
+    </tr>
     <tr>
         <td></td>
         <td><b><u>{{ $result->get_current_approve->nm_lengkap }}</u></b><br><b>{{ $result->get_current_approve->get_jabatan->nm_jabatan }}</b></td>

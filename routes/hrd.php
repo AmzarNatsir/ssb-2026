@@ -984,3 +984,4 @@ Route::group(['middleware' => 'auth'], function()
 // Public verification routes (no authentication required)
 Route::get('verify/pkwt/{id}', 'Hrd\PerubahanStatusController@verifyPkwt')->name('hrd.verify.pkwt');
 Route::get('verify/cuti/{id}', 'Hrd\PelaporanController@verifyCuti')->name('hrd.verify.cuti');
+Route::get('verify/mutasi/{id}', 'Hrd\MutasiController@verifyMutasi')->name('hrd.verify.mutasi');
