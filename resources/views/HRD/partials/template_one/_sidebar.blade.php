@@ -267,10 +267,10 @@
                 @endif
                 @if(auth()->user()->can('karyawan_view'))
                     <li>
-                        <a href="#karyawan" class="iq-waves-effect collapsed" data-toggle="collapse" aria-expanded="false"><i
-                                class="fa fa-address-book-o"></i><span>Karyawan</span><i
+                        <a href="#pendataan" class="iq-waves-effect collapsed" data-toggle="collapse" aria-expanded="false"><i
+                                class="fa fa-address-book-o"></i><span>Pendataan</span><i
                                 class="ri-arrow-right-s-line iq-arrow-right"></i></a>
-                        <ul id="karyawan" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                        <ul id="pendataan" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
                             @if(auth()->user()->can('karyawan_karyawan_view'))
                                 <li><a href="{{ url('hrd/karyawan/daftar') }}" class="iq-waves-effect"><i
                                             class="ri-user-line"></i><span>Karyawan</span></a></li>
