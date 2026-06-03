@@ -6,7 +6,7 @@
             @if (auth()->user()->nik == "999999999")
                     <li><a href="{{ url('hrd/dashboard') }}" class="iq-waves-effect"><i
                                 class="ri-pie-chart-box-line"></i><span>Dashboard</span></a></li>
-                    {{-- <li>
+                    <li>
                         <a href="#menu-level" class="iq-waves-effect collapsed" data-toggle="collapse" aria-expanded="false"><i
                                 class="ri-chat-check-line"></i><span>Data Master</span><i
                                 class="ri-arrow-right-s-line iq-arrow-right"></i></a>
@@ -41,7 +41,7 @@
                             <li><a href="{{ url('hrd/masterdata/jenissp') }}">Tingkatan SP</a></li>
                             <li><a href="{{ url('hrd/masterdata/jenisPelanggaran') }}">Jenis Pelanggaran</a></li>
                         </ul>
-                    </li> --}}
+                    </li>
                     <li>
                         <a href="#Setup" class="iq-waves-effect collapsed" data-toggle="collapse" aria-expanded="false"><i
                                 class="fa fa-gear"></i><span>Setup</span><i
