@@ -36,9 +36,9 @@
 </div>
 <div class="form-group row">
     <div class="col-sm-12">
-        @if(!empty($dt_d->evidence_pasca))
-            <a href="{{ url(Storage::url('hrd/evidence_pelatihan/'.$dt_d->evidence_pasca)) }}" data-fancybox data-caption="evidance">
-            <img src="{{ url(Storage::url('hrd/evidence_pelatihan/'.$dt_d->evidence_pasca)) }}"
+        @if(!empty($evidence_pasca_url))
+            <a href="{{ $evidence_pasca_url }}" data-fancybox data-caption="evidance">
+            <img src="{{ $evidence_pasca_url }}"
                 alt="evidance" style="width: 150px; height: auto;" class="img-fluid img-thumbnail"></a>
         @else
             <a href="{{ asset('assets/images/user/1.jpg') }}" data-fancybox data-caption="evidance">

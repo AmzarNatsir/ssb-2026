@@ -774,6 +774,7 @@ Route::group(['middleware' => 'auth'], function()
         Route::get('goListLaporan', 'Hrd\DiklatController@list_laporan_pasca_pelatihan');
         Route::get('getDetailPelatihan/{id}', 'Hrd\DiklatController@getDetailPelatihan');
         Route::get('detailPascaPelatihan/{id}', 'Hrd\DiklatController@detail_pasca_pelatihan');
+        Route::get('evidence-pasca/{filename}', 'Hrd\DiklatController@getEvidencePascaFromEss')->name('hrd.pelatihan.evidence-pasca');
 
         //pengajuan
         Route::get('pengajuan', 'Hrd\DiklatController@pengajuan');

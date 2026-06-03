@@ -19,6 +19,7 @@ use App\Models\HRD\PengajuanPelatihanDetailModel;
 use App\Models\HRD\PengajuanPelatihanHeaderModel;
 use PDF;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 class DiklatController extends Controller
 {
@@ -511,7 +512,42 @@ class DiklatController extends Controller
     public function detail_pasca_pelatihan($id)
     {
         $data['dt_d'] = PelatihanDetailModel::find($id);
+        $data['evidence_pasca_url'] = !empty($data['dt_d']->evidence_pasca)
+            ? route('hrd.pelatihan.evidence-pasca', ['filename' => $data['dt_d']->evidence_pasca])
+            : null;
         return view('HRD.diklat.pasca.detail_pasca', $data);
+    }
+
+    public function getEvidencePascaFromEss($filename)
+    {
+        $filename = basename((string) $filename);
+
+        if (empty($filename)) {
+            abort(404);
+        }
+
+        $baseUrl = rtrim((string) env('URL_ESS_DOCS'), '/');
+        $secretKey = (string) env('TOKEN_SECRET_KEY_ESS');
+
+        if (empty($baseUrl) || empty($secretKey)) {
+            abort(500, 'Konfigurasi ESS docs belum lengkap.');
+        }
+
+        $endpoint = $baseUrl . '/documents/training/' . rawurlencode($filename);
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $secretKey,
+            'X-API-KEY' => $secretKey,
+            'Accept' => '*/*',
+        ])->timeout(20)->get($endpoint);
+
+        if (!$response->successful()) {
+            abort($response->status());
+        }
+
+        return response($response->body(), 200)
+            ->header('Content-Type', $response->header('Content-Type', 'application/octet-stream'))
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
     }
 
 
