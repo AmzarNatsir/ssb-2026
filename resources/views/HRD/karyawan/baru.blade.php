@@ -154,6 +154,12 @@
                                     </div>
                                     <div class="row align-items-center">
                                         <div class="form-group col-sm-12">
+                                            <label for="inp_nomor_kartu_keluarga">Nomor Kartu Keluarga :</label>
+                                            <input type="text" class="form-control" id="inp_nomor_kartu_keluarga" name="inp_nomor_kartu_keluarga" maxlength="50" disabled>
+                                        </div>
+                                    </div>
+                                    <div class="row align-items-center">
+                                        <div class="form-group col-sm-12">
                                             <label for="inp_alamat">Alamat :</label>
                                             <input type="text" class="form-control" id="inp_alamat" name="inp_alamat" maxlength="150" required disabled>
                                         </div>
@@ -482,6 +488,7 @@
         $("#inp_nomor_npwp").attr('disabled', tf);
         $("#inp_nomor_bpjstk").attr('disabled', tf);
         $("#inp_nomor_bpjsks").attr('disabled', tf);
+        $("#inp_nomor_kartu_keluarga").attr('disabled', tf);
         $("#pil_divisi").attr('disabled', tf);
         $("#pil_departemen").attr('disabled', tf);
         $("#pil_subdepartemen").attr('disabled', tf);
@@ -513,6 +520,7 @@
         $("#inp_nomor_npwp").val("");
         $("#inp_nomor_bpjstk").val("");
         $("#inp_nomor_bpjsks").val("");
+        $("#inp_nomor_kartu_keluarga").val("");
         $("#pil_divisi").get(0).selectedIndex = 0;
         $("#pil_departemen").get(0).selectedIndex = 0;
         $("#pil_subdepartemen").empty();

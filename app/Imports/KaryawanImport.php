@@ -28,6 +28,7 @@ class KaryawanImport implements ToModel, WithHeadingRow
             "tmp_lahir" => $row['tmp_lahir'],
             "tgl_lahir" => $row['tgl_lahir'],
             "jenkel" => $row['jenkel'],
+            "kartu_keluarga_no" => $row['no_kk'] ?? $row['kartu_keluarga_no'] ?? null,
             "no_ktp" => $row['no_ktp'],
             "alamat" => $row['alamat'],
             "notelp" => $row['notelp'],

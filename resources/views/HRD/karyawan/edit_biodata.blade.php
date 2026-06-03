@@ -176,6 +176,12 @@
                                             <input type="text" class="form-control" id="inp_id_finger" name="inp_id_finger" value="{{ $res->nik_lama }}" maxlength="10">
                                         </div>
                                     </div>
+                                    <div class="row align-items-center">
+                                        <div class="form-group col-sm-12">
+                                            <label for="inp_nomor_kartu_keluarga">Nomor Kartu Keluarga :</label>
+                                            <input type="text" class="form-control" id="inp_nomor_kartu_keluarga" name="inp_nomor_kartu_keluarga" maxlength="50" value="{{ $res->kartu_keluarga_no }}">
+                                        </div>
+                                    </div>
                                     <hr>
                                     <button type="submit" id="tbl_simpan" class="btn btn-primary"><i class="fa fa-save"></i> Submit</button>
                                 </div>

@@ -81,6 +81,7 @@ class KaryawanUpsertImport implements ToCollection, WithHeadingRow
                         "tmp_lahir" => $row['tempat_lahir'] ?? null,
                         "tgl_lahir" => $tgl_lahir,
                         "jenkel" => $jenkel,
+                        "kartu_keluarga_no" => $row['no_kk'] ?? $row['kartu_keluarga_no'] ?? null,
                         "no_ktp" => $row['no_ktp'] ?? null,
                         "alamat" => $row['alamat'] ?? null,
                         "notelp" => $row['no_telepon'] ?? null,

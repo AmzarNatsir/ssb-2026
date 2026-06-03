@@ -223,6 +223,10 @@ class KaryawanController extends Controller
         if($request->hasFile('file_photo'))
         {
             $image = $request->file('file_photo');
+            if (!$image->isValid()) {
+                return redirect('hrd/karyawan/baru')->with('konfirm', 'Data gagal disimpan. File photo tidak dapat dibaca. Periksa kembali file yang diupload.');
+            }
+
             $extension = $image->getClientOriginalExtension();
             $check=in_array($extension,$allowedfileExtension);
             if($check)
@@ -233,12 +237,21 @@ class KaryawanController extends Controller
                     $path = Storage::disk('public')->makeDirectory('hrd/photo');
                 }
                 //$path = Storage::disk('local')->makeDirectory('public/hrd/photo');
-                $image_resize = Image::make($image->getRealPath());
-                $image_resize->resize(150, null, function($construction){
-                    $construction->aspectRatio();
-                });
+                try {
+                    $imagePath = $image->getRealPath();
+                    if (empty($imagePath) || !is_readable($imagePath)) {
+                        return redirect('hrd/karyawan/baru')->with('konfirm', 'Data gagal disimpan. File photo tidak dapat dibaca. Periksa kembali file yang diupload.');
+                    }
 
-                $image_resize->save(storage_path("app/public/hrd/photo/".$filename));
+                    $image_resize = Image::make($imagePath);
+                    $image_resize->resize(150, null, function($construction){
+                        $construction->aspectRatio();
+                    });
+
+                    $image_resize->save(storage_path("app/public/hrd/photo/".$filename));
+                } catch (\Exception $ex) {
+                    return redirect('hrd/karyawan/baru')->with('konfirm', 'Data gagal disimpan. File photo tidak dapat diproses. Periksa kembali file yang diupload.');
+                }
 
 
                 $arr_tgl_masuk = explode("/", $request->inp_tgl_masuk);
@@ -277,6 +290,7 @@ class KaryawanController extends Controller
                     'no_npwp' => $request->inp_nomor_npwp,
                     'no_bpjstk' => $request->inp_nomor_bpjstk,
                     'no_bpjsks' => $request->inp_nomor_bpjsks,
+                    'kartu_keluarga_no' => $request->inp_nomor_kartu_keluarga,
                     'photo' => $filename,
                     'tgl_masuk' => $tgl_masuk,
                     'id_divisi' => $request->pil_divisi,
@@ -412,6 +426,7 @@ class KaryawanController extends Controller
                 $update->no_npwp = $request->inp_nomor_npwp;
                 $update->no_bpjstk = $request->inp_nomor_bpjstk;
                 $update->no_bpjsks = $request->inp_nomor_bpjsks;
+                $update->kartu_keluarga_no = $request->inp_nomor_kartu_keluarga;
                 $update->nik_lama = $request->inp_id_finger;
                 $update->photo = $filename;
                 $update->save();
@@ -440,6 +455,7 @@ class KaryawanController extends Controller
             $update->no_npwp = $request->inp_nomor_npwp;
             $update->no_bpjstk = $request->inp_nomor_bpjstk;
             $update->no_bpjsks = $request->inp_nomor_bpjsks;
+            $update->kartu_keluarga_no = $request->inp_nomor_kartu_keluarga;
             $update->nik_lama = $request->inp_id_finger;
             $update->save();
             return redirect('hrd/karyawan/profil/'.$id)->with('konfirm', 'Biodata karyawan berhasil disimpan.');

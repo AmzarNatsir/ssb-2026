@@ -159,6 +159,10 @@
                                                     <h6>No. Rekening Bank :</h6>
                                                     <p>{{ $res->no_rekening }} / {{ $res->nm_bank }}</p>
                                                 </div>
+                                                <div class="mt-2">
+                                                    <h6>No. Kartu Keluarga :</h6>
+                                                    <p>{{ $res->kartu_keluarga_no }}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
