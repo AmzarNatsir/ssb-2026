@@ -7,6 +7,7 @@ use App\Models\HRD\ExitInterviewsModel;
 use App\Models\HRD\KaryawanModel;
 use App\Models\HRD\ResignModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use App\Helpers\Hrdhelper as hrdfunction;
 use App\User;
 use Carbon\Carbon;
@@ -37,6 +38,39 @@ class ResignController extends Controller
         ];
         return view('HRD.resign.list_pengajuan', $data);
     }
+
+    public function getSuratResignFromEss($filename)
+    {
+        $filename = basename((string) $filename);
+
+        if (empty($filename)) {
+            abort(404);
+        }
+
+        $baseUrl = rtrim((string) env('URL_ESS_DOCS'), '/');
+        $secretKey = (string) env('TOKEN_SECRET_KEY_ESS');
+
+        if (empty($baseUrl) || empty($secretKey)) {
+            abort(500, 'Konfigurasi ESS docs belum lengkap.');
+        }
+
+        $endpoint = $baseUrl . '/documents/resign/' . rawurlencode($filename);
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $secretKey,
+            'X-API-KEY' => $secretKey,
+            'Accept' => '*/*',
+        ])->timeout(20)->get($endpoint);
+
+        if (!$response->successful()) {
+            abort($response->status());
+        }
+
+        return response($response->body(), 200)
+            ->header('Content-Type', $response->header('Content-Type', 'application/octet-stream'))
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+    }
+
     public function all_exit_form()
     {
         $data = [

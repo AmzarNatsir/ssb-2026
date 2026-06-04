@@ -688,6 +688,7 @@ Route::group(['middleware' => 'auth'], function()
         Route::get('daftarPerjalananDinas', 'Hrd\PerdisController@list_perdis_admin');
         Route::get('daftarPerjalananDinasFilter/{bulan}/{tahun}/{departemen}', 'Hrd\PerdisController@list_perdis_filter_admin');
         Route::get('daftarPerjalananDinasDetail/{id}', 'Hrd\PerdisController@list_perdis_detail_admin');
+        Route::get('dokumen/{filename}', 'Hrd\PerdisController@getDokumenFromEss')->name('hrd.perdis.dokumen');
 
         //Pengajuan Atasan Langsung
         Route::get('listpengajuan', 'Hrd\PerdisController@list_pengajuan');
@@ -966,6 +967,7 @@ Route::group(['middleware' => 'auth'], function()
         route::get('/', 'Hrd\LemburController@index');
         Route::get('showData/{filter}', 'Hrd\LemburController@show_data');
         Route::get('detailData/{id}', 'Hrd\LemburController@detail_data');
+        Route::get('surat-perintah/{filename}', 'Hrd\LemburController@getSuratPerintahFromEss')->name('hrd.lembur.surat-perintah');
 
     });
 
@@ -979,6 +981,7 @@ Route::group(['middleware' => 'auth'], function()
         Route::get('pengaturanResign/{id}', 'Hrd\ResignController@pengaturan_resign');
         Route::put('pengaturanResignStore/{id}', 'Hrd\ResignController@pengaturan_resign_store');
         Route::get('printSKK/{id}', 'Hrd\ResignController@print_skk');
+        Route::get('surat-resign/{filename}', 'Hrd\ResignController@getSuratResignFromEss')->name('hrd.resign.surat-resign');
     });
 });
 

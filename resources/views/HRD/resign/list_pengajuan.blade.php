@@ -40,7 +40,7 @@
                         <td style="vertical-align: middle">{{ $list->alasan_resign }}</td>
                         <td style="vertical-align: middle; text-align: center">
                             @if(!empty($list->file_surat_resign))
-                                <a href="{{ url('hrd/dataku/resign/showPdf', $list->id) }}" target="_new"><i class="fa fa-file-pdf-o"></i></a>
+                                <a href="{{ route('hrd.resign.surat-resign', ['filename' => basename($list->file_surat_resign)]) }}" target="_new"><i class="fa fa-file-pdf-o"></i></a>
                                 @endif
                         </td>
                         <td style="text-align:center; vertical-align: middle"><p style="font-size: 12px" class="badge badge-danger">{{ date('d-m-Y', strtotime($list->tgl_eff_resign)) }}</p></td>

@@ -54,9 +54,9 @@
             @endif
             </td>
             <td style="text-align: center">
-                @if($list->status_pengajuan==2)
+                {{-- @if($list->status_pengajuan==2) --}}
                 <button type="button" class="btn btn-primary" value="{{ $list->id }}" data-toggle="modal" data-target="#modalDetail" onclick="goDetail(this)" title="Detail Lembur"><i class="fa fa-eye"></i></button>
-                @endif
+                {{-- @endif --}}
             </td>
         </tr>
         @php $nom++ @endphp

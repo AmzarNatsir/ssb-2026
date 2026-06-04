@@ -102,6 +102,8 @@
                             </ul>
                         </li>
                         <li><a href="{{ url('hrd/absensi') }}">Absensi</a></li>
+                        <li><a href="{{ url('hrd/lembur') }}">Lembur</a></li>
+                        <li><a href="{{ url('hrd/resign') }}">Resign</a></li>
                     </ul>
                 </li>
                 <li>

@@ -54,9 +54,9 @@
                         <tbody>
                             <tr>
                                 <td style="text-align: center">
-                                    @if(!empty($profil->file_surat_perintah_lembur))
-                                    <a href="{{ url(Storage::url('hrd/lembur/'.$profil->file_surat_perintah_lembur)) }}" data-fancybox data-caption="avatar">
-                                    <img src="{{ url(Storage::url('hrd/lembur/'.$profil->file_surat_perintah_lembur)) }}"
+                                    @if(!empty($surat_perintah_url))
+                                    <a href="{{ $surat_perintah_url }}" data-fancybox data-caption="avatar">
+                                    <img src="{{ $surat_perintah_url }}"
                                        alt="avatar" style="width: 150px; height: auto;" class="img-fluid img-thumbnail"></a>
                                     @else
                                     <a href="{{ asset('assets/images/user/1.jpg') }}" data-fancybox data-caption="avatar">

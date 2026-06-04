@@ -17,6 +17,7 @@ use App\Models\HRD\PerdisFasilitasModel;
 use Config;
 use PDF;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 class PerdisController extends Controller
 {
@@ -396,5 +397,37 @@ class PerdisController extends Controller
         $data['profil'] = PerdisModel::find($id);
         $data['fasilitas'] = PerdisFasilitasModel::where('id_perdis', $id)->get();
         return view('HRD.perdis.admin.list_perdis_result_detail', $data);
+    }
+
+    public function getDokumenFromEss($filename)
+    {
+        $filename = basename((string) $filename);
+
+        if (empty($filename)) {
+            abort(404);
+        }
+
+        $baseUrl = rtrim((string) env('URL_ESS_DOCS'), '/');
+        $secretKey = (string) env('TOKEN_SECRET_KEY_ESS');
+
+        if (empty($baseUrl) || empty($secretKey)) {
+            abort(500, 'Konfigurasi ESS docs belum lengkap.');
+        }
+
+        $endpoint = $baseUrl . '/documents/perdis/' . rawurlencode($filename);
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $secretKey,
+            'X-API-KEY' => $secretKey,
+            'Accept' => '*/*',
+        ])->timeout(20)->get($endpoint);
+
+        if (!$response->successful()) {
+            abort($response->status());
+        }
+
+        return response($response->body(), 200)
+            ->header('Content-Type', $response->header('Content-Type', 'application/octet-stream'))
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
     }
 }

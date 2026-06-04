@@ -68,14 +68,14 @@
                                 <td style="text-align:right">{{ number_format($list->sub_total, 0) }}</td>
                                 <td style="text-align:center; width: 10%;">
                                     @if(!empty($list->file_1))
-                                    <a href="{{ url(Storage::url($path.$list->file_1)) }}" data-fancybox data-caption='Dokumen'>
-                                    <img src="{{ url(Storage::url($path.$list->file_1)) }}" style="width: auto; height: 100px" alt="Dokumen"></a>
+                                    <a href="{{ route('hrd.perdis.dokumen', ['filename' => basename($list->file_1)]) }}" data-fancybox data-caption='Dokumen'>
+                                    <img src="{{ route('hrd.perdis.dokumen', ['filename' => basename($list->file_1)]) }}" style="width: auto; height: 100px" alt="Dokumen"></a>
                                     @endif
                                 </td>
                                 <td style="text-align:center; width: 10%;">
                                     @if(!empty($list->file_2))
-                                    <a href="{{ url(Storage::url($path.$list->file_2)) }}" data-fancybox data-caption='Dokumen'>
-                                    <img src="{{ url(Storage::url($path.$list->file_2)) }}" style="width: auto; height: 100px" alt="Dokumen"></a>
+                                    <a href="{{ route('hrd.perdis.dokumen', ['filename' => basename($list->file_2)]) }}" data-fancybox data-caption='Dokumen'>
+                                    <img src="{{ route('hrd.perdis.dokumen', ['filename' => basename($list->file_2)]) }}" style="width: auto; height: 100px" alt="Dokumen"></a>
                                     @endif
                                 </td>
                             </tr>
