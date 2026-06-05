@@ -40,6 +40,7 @@
                             <li><a href="{{ url('hrd/masterdata/pelatihan') }}">Pelatihan</a></li>
                             <li><a href="{{ url('hrd/masterdata/jenissp') }}">Tingkatan SP</a></li>
                             <li><a href="{{ url('hrd/masterdata/jenisPelanggaran') }}">Jenis Pelanggaran</a></li>
+                            <li><a href="{{ url('hrd/masterdata/statusTanggungan') }}">Status Tanggungan</a></li>
                         </ul>
                     </li>
                     <li>
