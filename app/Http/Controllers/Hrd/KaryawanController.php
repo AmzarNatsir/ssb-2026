@@ -103,6 +103,34 @@ class KaryawanController extends Controller
 
         return view('HRD.karyawan.result_view', $data);
     }
+    public function filter_data(Request $request)
+    {
+        $query = KaryawanModel::with(['get_jabatan', 'get_departemen'])->where('nik', '<>', '999999999');
+
+        $departemen = $request->departemen;
+        if ($departemen === 'non') {
+            $query->whereNull('id_departemen');
+        } elseif ($departemen !== null && $departemen !== '') {
+            $query->where('id_departemen', $departemen);
+        }
+
+        $status = $request->status;
+        if ($status === 'aktif') {
+            $query->whereIn('id_status_karyawan', [1, 2, 3, 7]);
+        } elseif ($status === 'nonaktif') {
+            $query->whereIn('id_status_karyawan', [4, 5, 6]);
+        } elseif ($status !== null && $status !== '') {
+            $query->where('id_status_karyawan', $status);
+        }
+
+        $gender = $request->gender;
+        if ($gender !== null && $gender !== '') {
+            $query->where('jenkel', $gender);
+        }
+
+        $data['list_data'] = $query->get();
+        return view('HRD.karyawan.result_view', $data);
+    }
     public function baru()
     {
         $all_agama = Config::get("constants.agama");

@@ -479,6 +479,7 @@ Route::group(['middleware' => 'auth'], function()
         Route::get('filter/{id_status}', 'Hrd\KaryawanController@filter');
         Route::get('filter_departemen/{departemen}', 'Hrd\KaryawanController@filter_departemen');
         Route::get('filter_departemen_gender/{departemen}/{gender}', 'Hrd\KaryawanController@filter_departemen_gender');
+        Route::get('filter_data', 'Hrd\KaryawanController@filter_data');
         route::get('baru', 'Hrd\KaryawanController@baru');
         route::get('loaddepartement/{id}', 'Hrd\KaryawanController@load_departement');
         route::get('loadsubdept/{id}', 'Hrd\KaryawanController@load_subdept');

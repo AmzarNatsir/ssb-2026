@@ -1,4 +1,5 @@
-<table id="user-list-table" class="table datatable table-hover table-striped table-bordered mt-4" role="grid" aria-describedby="user-list-page-info">
+<div class="table-responsive">
+<table id="user-list-table" class="table datatable table-hover table-striped table-bordered mt-4" role="grid" aria-describedby="user-list-page-info" style="width:100%">
     <thead>
         <tr>
             <th scope="col">#</th>
@@ -80,6 +81,7 @@
         @endforeach
     </tbody>
 </table>
+</div>
 <script type="text/javascript">
     $(document).ready(function()
     {
