@@ -11,6 +11,7 @@ use App\Models\HRD\DivisiModel;
 use App\Models\HRD\DepartemenModel;
 use App\Models\HRD\SubDepartemenModel;
 use App\Models\HRD\JabatanModel;
+use App\Models\HRD\StatusTanggunganModel;
 
 class KaryawanUpsertImport implements ToCollection, WithHeadingRow
 {
@@ -27,6 +28,12 @@ class KaryawanUpsertImport implements ToCollection, WithHeadingRow
         $pendidikan_keys = array_keys(Config::get("constants.jenjang_pendidikan") ?? []);
         $status_nikah_keys = array_keys(Config::get("constants.status_pernikahan") ?? []);
         $status_karyawan_keys = array_keys(Config::get("constants.status_karyawan") ?? []);
+
+        // Map kode => id status tanggungan (dinormalisasi: trim + uppercase) untuk lookup cepat
+        $status_tanggungan_map = [];
+        foreach (StatusTanggunganModel::all() as $st) {
+            $status_tanggungan_map[strtoupper(trim((string) $st->kode))] = $st->id;
+        }
 
         foreach ($rows as $row) {
             // Re-validate to be absolutely sure
@@ -57,6 +64,13 @@ class KaryawanUpsertImport implements ToCollection, WithHeadingRow
             $id_departemen = $row['departemen_id'] ?? null;
             $id_subdepartemen = $row['sub_departemen_id'] ?? null;
             $id_jabatan = $row['jabatan_id'] ?? null;
+
+            // STATUS TANGGUNGAN (kolom AA): cari id berdasarkan kode, NULL jika tidak ditemukan
+            $kode_tanggungan = $row['status_tanggungan'] ?? null;
+            $id_status_tanggungan = null;
+            if (!empty($kode_tanggungan)) {
+                $id_status_tanggungan = $status_tanggungan_map[strtoupper(trim((string) $kode_tanggungan))] ?? null;
+            }
 
             if (!empty($tgl_masuk) && !preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $tgl_masuk)) { $isValid = false; }
             if (!empty($tgl_lahir) && !preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $tgl_lahir)) { $isValid = false; }
@@ -94,6 +108,7 @@ class KaryawanUpsertImport implements ToCollection, WithHeadingRow
                         "no_bpjstk" => $row['no_bpjs_tk'] ?? null,
                         "no_bpjsks" => $row['no_bpjs_ks'] ?? null,
                         "id_status_karyawan" => $id_status_karyawan,
+                        "id_status_tanggungan" => $id_status_tanggungan,
                         "id_divisi" => $id_divisi,
                         "id_departemen" => $id_departemen,
                         "id_subdepartemen" => $id_subdepartemen,
