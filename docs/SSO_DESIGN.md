@@ -403,8 +403,12 @@ Controller `app/Http/Controllers/Oauth/UserInfoController.php` mengembalikan
   Setiap aksi menyinkronkan `oauth_clients` (via `ClientRepository`) **dan**
   `sso_clients`. Secret confidential ditampilkan **sekali** saat dibuat.
 - View Bootstrap di `resources/views/sso/clients/{index,create,edit}.blade.php`
-  (extend `layouts.app`). Akses via URL langsung; entri menu/sidebar bisa
-  ditambah nanti agar tidak menyentuh whitelist aset/menu bersama.
+  (extend `layouts.app`).
+- **Menu sidebar:** ditambahkan item **"Client SSO"** (ikon `ri-key-line`) di
+  `resources/views/HRD/partials/template_one/_sidebar.blade.php`, dibungkus
+  `@can('manage-sso')` → tampil untuk super admin (nik `999999999` atau role
+  `super_admin`/`Super Admin`), mengarah ke `route('sso.clients.index')`.
+  Tidak menyentuh whitelist aset (halaman pakai `layouts.app` sendiri).
 - Gate `manage-sso` (di `AuthServiceProvider`): super admin (`nik 999999999`
   atau role `super_admin`/`Super Admin`).
 
