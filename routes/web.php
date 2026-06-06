@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', 'Auth\LoginController@showLoginForm')->name('auth.login');
 Route::post('/', 'Auth\LoginController@login')->name('auth.do.login');
 Route::post('/logout', 'Auth\LoginController@logout')->name('auth.logout');
+
+// === SSO Single Logout (Tahap 5) — front-channel ===
+// Client (ESS, dst) mengarahkan browser ke sini untuk mengakhiri session IdP
+// + revoke token, lalu redirect balik ke client (divalidasi anti open-redirect).
+Route::get('/sso/logout', 'Oauth\SsoLogoutController@logout')->name('sso.logout');
 // Route::get('/', function () {
 //     return view('welcome');
 // });
@@ -25,3 +30,14 @@ Route::post('/logout', 'Auth\LoginController@logout')->name('auth.logout');
 
 Route::get('/home', 'HomeController@index')->name('home')->middleware('auth');
 Route::get('/home/set-default', 'HomeController@setDefault')->name('home.set-default')->middleware('auth');
+
+// === SSO (Identity Provider) — Admin kelola aplikasi client. Tahap 3 ===
+// Proteksi auth + gate 'manage-sso' (super admin) di dalam controller.
+Route::prefix('admin/sso')->name('sso.')->group(function () {
+    Route::get('/clients', 'Oauth\SsoClientController@index')->name('clients.index');
+    Route::get('/clients/create', 'Oauth\SsoClientController@create')->name('clients.create');
+    Route::post('/clients', 'Oauth\SsoClientController@store')->name('clients.store');
+    Route::get('/clients/{ssoClient}/edit', 'Oauth\SsoClientController@edit')->name('clients.edit');
+    Route::put('/clients/{ssoClient}', 'Oauth\SsoClientController@update')->name('clients.update');
+    Route::delete('/clients/{ssoClient}', 'Oauth\SsoClientController@destroy')->name('clients.destroy');
+});

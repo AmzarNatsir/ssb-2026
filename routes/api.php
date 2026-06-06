@@ -21,6 +21,11 @@ Route::post('/login', 'AuthController@login');
 
 Route::middleware('auth:sanctum')->post('/refresh-token', 'AuthController@refreshToken');
 
+// === SSO (Identity Provider) — Userinfo. Tahap 3 ===
+// Guard 'oauth' (driver passport) → butuh access token Passport hasil alur SSO.
+// URL final: /api/oauth/userinfo. Mengembalikan identitas saja (tanpa role).
+Route::middleware('auth:oauth')->get('/oauth/userinfo', 'Oauth\UserInfoController@show');
+
 // Admin: manage service tokens (permanent token untuk aplikasi eksternal)
 Route::middleware('sanctum')->prefix('admin')->group(function () {
     Route::get('/service-token', 'ServiceTokenController@index');

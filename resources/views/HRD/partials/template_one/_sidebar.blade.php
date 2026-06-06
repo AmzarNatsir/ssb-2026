@@ -3,6 +3,10 @@
         <ul id="iq-sidebar-toggle" class="iq-menu">
             <li><a href="{{ url('hrd/home') }}" class="iq-waves-effect"><i
                         class="ri-home-4-line"></i><span>Home</span></a></li>
+            @can('manage-sso')
+                <li><a href="{{ route('sso.clients.index') }}" class="iq-waves-effect"><i
+                            class="ri-key-line"></i><span>Client SSO</span></a></li>
+            @endcan
             @if (auth()->user()->nik == "999999999")
                     <li><a href="{{ url('hrd/dashboard') }}" class="iq-waves-effect"><i
                                 class="ri-pie-chart-box-line"></i><span>Dashboard</span></a></li>
