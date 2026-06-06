@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', 'Auth\LoginController@showLoginForm')->name('auth.login');
 Route::post('/', 'Auth\LoginController@login')->name('auth.do.login');
 Route::post('/logout', 'Auth\LoginController@logout')->name('auth.logout');
+
+// === SSO Single Logout (Tahap 5) — front-channel ===
+// Client (ESS, dst) mengarahkan browser ke sini untuk mengakhiri session IdP
+// + revoke token, lalu redirect balik ke client (divalidasi anti open-redirect).
+Route::get('/sso/logout', 'Oauth\SsoLogoutController@logout')->name('sso.logout');
 // Route::get('/', function () {
 //     return view('welcome');
 // });
