@@ -1,6 +1,6 @@
 # Rancangan SSO — SSB sebagai Identity Provider (IdP)
 
-> Status: **Tahap 1 & 2 SELESAI** (endpoint OAuth aktif, reuse login existing) — Tahap 3 berikutnya
+> Status: **Tahap 1–3 SELESAI** (OAuth aktif, userinfo + admin client + skip-consent) — Tahap 4 (integrasi ESS) berikutnya
 > Tanggal: 2026-06-06
 > Aplikasi utama (IdP): **SSB-PROJECT** (Laravel 8 / PHP 8)
 > Client awal (SP): **ESS**, **Warehouse**
@@ -192,9 +192,10 @@ User klik logout di ESS
 - [x] Route `/oauth/authorize` & `/oauth/token` (registrasi `Passport::routes()`); reuse session +
       `LoginController` existing untuk halaman login **[Tahap 2]**
 - [x] Publish view consent Passport + atur masa berlaku token (access 15 mnt, refresh 30 hari) **[Tahap 2]**
-- [ ] Route `/oauth/userinfo` → kembalikan identitas saja (NIK, nama, status) dari API karyawan **[Tahap 3]**
-- [ ] Tabel `sso_clients` + admin panel: daftar `client_id`, `secret`,
-      **whitelist `redirect_uri`** + flag trusted (skip consent first-party) **[Tahap 3]**
+- [x] Route `/api/oauth/userinfo` (guard `oauth`) → identitas saja (NIK, nama, email, is_active) dari `hrd_karyawan` **[Tahap 3]**
+- [x] Tabel `sso_clients` + admin panel CRUD (`/admin/sso/clients`, gate `manage-sso`) +
+      flag **trusted** (skip consent first-party) **[Tahap 3]**
+- [x] Batasi route manajemen client bawaan Passport (`/oauth/clients`, `/oauth/personal-access-tokens` tidak diregistrasi) **[Tahap 3]**
 - [ ] Route `/sso/logout` (front-channel logout) **[Tahap 5]**
 
 ### Di tiap Client (ESS, Warehouse)
@@ -223,7 +224,7 @@ User klik logout di ESS
 |---|---|---|
 | 1 ✅ | Pasang Passport + tabel `oauth_*` + guard `oauth` (belum diaktifkan ke publik) — **SELESAI** | nol (terverifikasi) |
 | 2 ✅ | Aktifkan `/oauth/authorize` & `/oauth/token`, reuse login session existing — **SELESAI** | nol (terverifikasi) |
-| 3 | `/oauth/userinfo` (identitas) + `sso_clients` + admin panel | nol |
+| 3 ✅ | `/oauth/userinfo` (identitas) + `sso_clients` + admin panel + skip-consent trusted — **SELESAI** | nol (terverifikasi) |
 | 4 | Integrasi 1 client pilot (ESS) — terisolasi | nol |
 | 5 | Warehouse menyusul + front-channel logout | nol |
 | 6 | (Opsional) Single Logout penuh & migrasi API existing bertahap | dikontrol |
@@ -358,7 +359,89 @@ GET /oauth/authorize?
 
 ---
 
-## 16. Glosarium
+## 16. Catatan Implementasi Tahap 3 (selesai 2026-06-06)
+
+**Tujuan:** lengkapi IdP dengan endpoint identitas, manajemen client, dan
+skip-consent untuk app first-party.
+
+**A. Endpoint `/api/oauth/userinfo`** (`routes/api.php`, guard `oauth`):
+
+```php
+Route::middleware('auth:oauth')->get('/oauth/userinfo', 'Oauth\UserInfoController@show');
+```
+
+Controller `app/Http/Controllers/Oauth/UserInfoController.php` mengembalikan
+**identitas saja** (tanpa role — sesuai keputusan arsitektur):
+
+```json
+{ "sub": "<nik>", "nik": "<nik>", "name": "<nm_lengkap>",
+  "email": "<nmemail>", "is_active": true }
+```
+
+> `name`/`email`/`is_active` diambil dari relasi `karyawan` (`hrd_karyawan`):
+> `nm_lengkap`, `nmemail`, dan `is_active = (tgl_resign IS NULL)`.
+> URL final ada di bawah prefix `api` → **`/api/oauth/userinfo`**.
+
+**B. Tabel `sso_clients` + model** (`database/migrations/..._create_sso_clients_table.php`):
+
+- Kolom: `oauth_client_id` (FK→`oauth_clients`, cascade), `name`, `slug`,
+  `description`, `logo`, `is_active`, `trusted`.
+- Melengkapi `oauth_clients` (kredensial), bukan menggantikan.
+- Model `App\Models\SsoClient` (relasi `oauthClient`).
+
+**C. Skip-consent untuk client trusted:**
+
+- Model `App\Models\Passport\Client` meng-override `skipsAuthorization()` →
+  `true` bila baris `sso_clients` punya `trusted = 1`.
+- Didaftarkan via `Passport::useClientModel(...)` di `AuthServiceProvider`.
+
+**D. Admin panel** (`/admin/sso/clients`, hanya super admin):
+
+- Route resource di `routes/web.php` (prefix `admin/sso`, name `sso.*`).
+- Controller `Oauth\SsoClientController` (middleware `auth` + `can:manage-sso`).
+  Setiap aksi menyinkronkan `oauth_clients` (via `ClientRepository`) **dan**
+  `sso_clients`. Secret confidential ditampilkan **sekali** saat dibuat.
+- View Bootstrap di `resources/views/sso/clients/{index,create,edit}.blade.php`
+  (extend `layouts.app`). Akses via URL langsung; entri menu/sidebar bisa
+  ditambah nanti agar tidak menyentuh whitelist aset/menu bersama.
+- Gate `manage-sso` (di `AuthServiceProvider`): super admin (`nik 999999999`
+  atau role `super_admin`/`Super Admin`).
+
+**E. Batasi route Passport bawaan (security):**
+
+```php
+Passport::routes(function ($router) {
+    $router->forAuthorization();
+    $router->forAccessTokens();
+    $router->forTransientTokens();
+    // forClients() & forPersonalAccessTokens() SENGAJA tidak didaftarkan
+});
+```
+
+→ `/oauth/clients*` dan `/oauth/personal-access-tokens*` tidak ada, sehingga
+user biasa tidak bisa membuat client OAuth sendiri. Manajemen client hanya
+lewat admin panel.
+
+**Verifikasi (sudah dijalankan):**
+
+- `route:list` → `api/oauth/userinfo` + `sso.clients.*` muncul; `/oauth/clients`
+  & `personal-access-tokens` **tidak ada**. ✅
+- `Passport::clientModel()` = `App\Models\Passport\Client`. ✅
+- Gate `manage-sso` terdaftar. ✅
+- Client uji (ID 1) didaftarkan ke `sso_clients` sebagai trusted →
+  `skipsAuthorization() === true`. ✅
+
+**File baru/berubah:**
+`database/migrations/..._create_sso_clients_table.php`,
+`app/Models/SsoClient.php`, `app/Models/Passport/Client.php`,
+`app/Http/Controllers/Oauth/UserInfoController.php`,
+`app/Http/Controllers/Oauth/SsoClientController.php`,
+`resources/views/sso/clients/*.blade.php`,
+`app/Providers/AuthServiceProvider.php`, `routes/web.php`, `routes/api.php`.
+
+---
+
+## 17. Glosarium
 
 - **IdP (Identity Provider):** aplikasi pusat yang mengautentikasi user — di sini SSB.
 - **SP / Client (Service Provider):** aplikasi yang mempercayakan login ke IdP — ESS, Warehouse.
