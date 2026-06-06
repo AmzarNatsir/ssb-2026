@@ -84,13 +84,18 @@ class SsbSsoController extends Controller
             abort(401, 'Access token kosong.');
         }
 
-        // 3) Ambil identitas (tanpa role) dari SSB
+        // 3) Ambil identitas dari SSB
         $userResp = Http::withToken($accessToken)
             ->acceptJson()
             ->get(config('services.ssb.base_url') . '/api/oauth/userinfo');
 
+        // SSB memusatkan kontrol akses: HTTP 403 = user tidak punya role akses
+        // di SSB, jadi tidak berhak masuk ESS (maupun client lain).
+        if ($userResp->status() === 403) {
+            abort(403, 'Anda tidak memiliki akses ke aplikasi ini. Hubungi administrator.');
+        }
         if ($userResp->failed()) {
-            abort(401, 'Gagal ambil userinfo.');
+            abort(401, 'Gagal mengambil userinfo dari SSB.');
         }
 
         $info = $userResp->json();
@@ -118,7 +123,9 @@ class SsbSsoController extends Controller
             'expires_in'    => $tokens['expires_in'] ?? null,
         ]);
 
-        // 5) Tetapkan ROLE LOKAL ESS (kebijakan ESS, bukan dari SSB)
+        // 5) Akses sudah dijamin SSB (punya role di SSB = berhak masuk).
+        //    Langkah ini OPSIONAL: hanya untuk role INTERNAL ESS (mis. menentukan
+        //    menu/fitur apa yang boleh dilihat di dalam ESS), bukan gerbang akses.
         $this->mapLocalRole($user, $info);
 
         // 6) Login & masuk aplikasi
@@ -140,18 +147,18 @@ class SsbSsoController extends Controller
     }
 
     /**
-     * Kebijakan role LOKAL ESS. SESUAIKAN dengan kebutuhan ESS.
+     * OPSIONAL — role INTERNAL ESS (fitur/menu di dalam ESS), BUKAN gerbang akses.
      *
-     * Contoh memakai Spatie Permission:
+     * Gerbang "boleh masuk atau tidak" sudah ditangani TERPUSAT di SSB
+     * (userinfo balas 403 bila user tak punya role). Jadi method ini cukup
+     * untuk menentukan kemampuan user di dalam ESS, contoh Spatie Permission:
      *   if ($user->roles->isEmpty()) {
-     *       // Opsi A: auto-assign role default
-     *       $user->assignRole('ess-user');
-     *       // Opsi B: tolak sampai admin ESS memberi akses
-     *       // abort(403, 'Akses ESS belum diberikan. Hubungi admin ESS.');
+     *       $user->assignRole('ess-user'); // role default fitur ESS
      *   }
+     * Boleh dibiarkan kosong bila ESS belum butuh role internal.
      */
     protected function mapLocalRole(User $user, array $info): void
     {
-        // TODO: implementasi sesuai kebijakan ESS.
+        // (opsional) atur role internal ESS di sini.
     }
 }

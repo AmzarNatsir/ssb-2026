@@ -484,7 +484,34 @@ dari SSB — ada hook `mapLocalRole()` agar ESS menetapkan role lokalnya sendiri
 
 ---
 
-## 18. Glosarium
+## 18. Kontrol Akses (siapa boleh masuk) — terpusat di SSB
+
+**Kebijakan:** Pembuatan & pengelolaan user dilakukan **di SSB**. **Punya role di
+SSB = berhak akses ESS dan seluruh client lain.** User tanpa role tidak bisa masuk
+SSB, sehingga otomatis tidak bisa SSO ke client mana pun. (Super admin `999999999`
+selalu boleh.)
+
+**Penegakan (dua lapis, semuanya di SSB):**
+
+1. **Saat login** — `LoginController::authenticated()` menolak user tanpa role
+   (kecuali super admin). Karena `/oauth/authorize` me-reuse login ini, user
+   tanpa role tidak akan pernah memperoleh `code`.
+2. **Di `/api/oauth/userinfo`** (pengaman berlapis) — mengembalikan **HTTP 403
+   `access_denied`** bila user tak punya role. Menutup kasus tepi seperti sesi
+   lama atau role dicabut setelah token terbit.
+
+**Sisi client (ESS):** tidak mengelola akses. Cukup:
+- Tangani `403` dari userinfo → tampilkan "tidak memiliki akses".
+- `firstOrCreate` user lokal by NIK (akses sudah dijamin SSB).
+- `mapLocalRole()` **opsional** — hanya untuk role *internal* ESS (menu/fitur di
+  dalam ESS), bukan gerbang akses.
+
+> Implikasi: untuk memberi/menarik akses seseorang ke ESS, cukup beri/cabut
+> **role** user tersebut di SSB (Manajemen Pengguna). Berlaku serentak ke semua client.
+
+---
+
+## 19. Glosarium
 
 - **IdP (Identity Provider):** aplikasi pusat yang mengautentikasi user — di sini SSB.
 - **SP / Client (Service Provider):** aplikasi yang mempercayakan login ke IdP — ESS, Warehouse.
