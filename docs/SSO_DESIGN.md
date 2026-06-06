@@ -402,13 +402,16 @@ Controller `app/Http/Controllers/Oauth/UserInfoController.php` mengembalikan
 - Controller `Oauth\SsoClientController` (middleware `auth` + `can:manage-sso`).
   Setiap aksi menyinkronkan `oauth_clients` (via `ClientRepository`) **dan**
   `sso_clients`. Secret confidential ditampilkan **sekali** saat dibuat.
-- View Bootstrap di `resources/views/sso/clients/{index,create,edit}.blade.php`
-  (extend `layouts.app`).
+- View di `resources/views/sso/clients/{index,create,edit}.blade.php`,
+  **`@extends('HRD.layouts.master')`** (tema Iqonic) → tampil lengkap dengan
+  topbar + sidebar HRD (markup `iq-card`, breadcrumb, alert `iq-alert`).
 - **Menu sidebar:** ditambahkan item **"Client SSO"** (ikon `ri-key-line`) di
   `resources/views/HRD/partials/template_one/_sidebar.blade.php`, dibungkus
   `@can('manage-sso')` → tampil untuk super admin (nik `999999999` atau role
   `super_admin`/`Super Admin`), mengarah ke `route('sso.clients.index')`.
-  Tidak menyentuh whitelist aset (halaman pakai `layouts.app` sendiri).
+- Tidak perlu sentuh whitelist aset: `_body_header` HRD memuat seluruh aset
+  tema tanpa guard route, jadi halaman `/admin/sso/*` otomatis dapat CSS/JS-nya.
+  Terverifikasi render penuh (HTTP 200) dengan user super admin.
 - Gate `manage-sso` (di `AuthServiceProvider`): super admin (`nik 999999999`
   atau role `super_admin`/`Super Admin`).
 
