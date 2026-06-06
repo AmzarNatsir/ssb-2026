@@ -46,6 +46,14 @@ return [
             'provider' => 'users',
             'hash' => false,
         ],
+
+        // Guard SSO (Identity Provider) — dipakai endpoint OAuth2 Passport.
+        // Tambahan/additive: guard 'web' & 'api' (Sanctum) tetap seperti semula.
+        // Endpoint /oauth/* baru aktif setelah Passport::routes() diregistrasi (Tahap 2).
+        'oauth' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
     ],
 
     /*
