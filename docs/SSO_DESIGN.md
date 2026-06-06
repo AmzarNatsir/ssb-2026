@@ -1,6 +1,6 @@
 # Rancangan SSO — SSB sebagai Identity Provider (IdP)
 
-> Status: **Tahap 1 SELESAI** (Passport terpasang, belum diaktifkan ke publik) — Tahap 2 berikutnya
+> Status: **Tahap 1 & 2 SELESAI** (endpoint OAuth aktif, reuse login existing) — Tahap 3 berikutnya
 > Tanggal: 2026-06-06
 > Aplikasi utama (IdP): **SSB-PROJECT** (Laravel 8 / PHP 8)
 > Client awal (SP): **ESS**, **Warehouse**
@@ -189,12 +189,13 @@ User klik logout di ESS
 - [x] `php artisan migrate` → tabel `oauth_*` terbuat **[Tahap 1]**
 - [x] `php artisan passport:keys` → kunci di `storage/oauth-*.key` (sudah ter-ignore via `/storage/*.key`) **[Tahap 1]**
 - [x] Tambah guard `oauth` di `config/auth.php` (driver `passport`; `web` / `api` TIDAK diubah) **[Tahap 1]**
-- [ ] Route `/oauth/authorize` & `/oauth/token` (registrasi `Passport::routes()`); reuse session +
+- [x] Route `/oauth/authorize` & `/oauth/token` (registrasi `Passport::routes()`); reuse session +
       `LoginController` existing untuk halaman login **[Tahap 2]**
-- [ ] Route `/oauth/userinfo` → kembalikan identitas saja (NIK, nama, status) dari API karyawan
+- [x] Publish view consent Passport + atur masa berlaku token (access 15 mnt, refresh 30 hari) **[Tahap 2]**
+- [ ] Route `/oauth/userinfo` → kembalikan identitas saja (NIK, nama, status) dari API karyawan **[Tahap 3]**
 - [ ] Tabel `sso_clients` + admin panel: daftar `client_id`, `secret`,
-      **whitelist `redirect_uri`**
-- [ ] Route `/sso/logout` (front-channel logout)
+      **whitelist `redirect_uri`** + flag trusted (skip consent first-party) **[Tahap 3]**
+- [ ] Route `/sso/logout` (front-channel logout) **[Tahap 5]**
 
 ### Di tiap Client (ESS, Warehouse)
 - [ ] `composer require laravel/socialite` + provider custom "ssb"
@@ -221,7 +222,7 @@ User klik logout di ESS
 | Tahap | Output | Dampak ke app lama |
 |---|---|---|
 | 1 ✅ | Pasang Passport + tabel `oauth_*` + guard `oauth` (belum diaktifkan ke publik) — **SELESAI** | nol (terverifikasi) |
-| 2 | Implement `/oauth/authorize` reuse login session existing | nol |
+| 2 ✅ | Aktifkan `/oauth/authorize` & `/oauth/token`, reuse login session existing — **SELESAI** | nol (terverifikasi) |
 | 3 | `/oauth/userinfo` (identitas) + `sso_clients` + admin panel | nol |
 | 4 | Integrasi 1 client pilot (ESS) — terisolasi | nol |
 | 5 | Warehouse menyusul + front-channel logout | nol |
@@ -279,7 +280,85 @@ Plus konfigurasi (additive) di `config/auth.php`:
 
 ---
 
-## 15. Glosarium
+## 15. Catatan Implementasi Tahap 2 (selesai 2026-06-06)
+
+**Tujuan:** mengaktifkan endpoint OAuth2 dan membuktikan alur authorize me-reuse
+halaman login yang sudah ada — tanpa mengubah `LoginController`.
+
+**Yang dikerjakan:**
+
+1. Registrasi route Passport + masa berlaku token di `app/Providers/AuthServiceProvider.php`:
+
+   ```php
+   use Laravel\Passport\Passport;
+
+   public function boot()
+   {
+       $this->registerPolicies();
+       // ... gate existing ...
+
+       Passport::routes();                                      // aktifkan /oauth/*
+       Passport::tokensExpireIn(now()->addMinutes(15));         // access token pendek
+       Passport::refreshTokensExpireIn(now()->addDays(30));     // refresh token
+       Passport::personalAccessTokensExpireIn(now()->addDays(7));
+   }
+   ```
+
+2. `php artisan vendor:publish --tag=passport-views` → layar consent di
+   `resources/views/vendor/passport/`.
+
+3. Membuat client uji (tipe **public/PKCE**, tanpa secret — sesuai prinsip keamanan):
+
+   ```bash
+   php artisan passport:client --public --name="ESS (dev)" \
+       --redirect_uri="http://localhost:8001/auth/ssb/callback" --no-interaction
+   # Client ID: 1  (redirect bisa diganti saat integrasi ESS nyata di Tahap 4)
+   ```
+
+**Cara kerja reuse login (kenapa `LoginController` tak perlu diubah):**
+
+- Route `oauth/authorize` otomatis bermiddleware **`web, auth`** (terverifikasi via
+  `gatherMiddleware()` → `web, auth`).
+- Guest yang membuka `/oauth/authorize` dilempar oleh middleware `Authenticate` ke
+  login utama (`APP_URL`), dan URL tujuan disimpan di session (`url.intended`).
+- Setelah login, Laravel memakai `redirect()->intended()` yang **memprioritaskan
+  `url.intended`** di atas `redirectTo()` (`/home`) milik `LoginController`, sehingga
+  user kembali ke `/oauth/authorize` dan alur berlanjut.
+
+**Contoh URL authorize (yang nanti dipanggil ESS):**
+
+```
+GET /oauth/authorize?
+    client_id=1&
+    redirect_uri=http://localhost:8001/auth/ssb/callback&
+    response_type=code&
+    scope=&
+    state=<random>&
+    code_challenge=<base64url(sha256(verifier))>&
+    code_challenge_method=S256
+```
+
+**Verifikasi (sudah dijalankan):**
+
+- `route:list` → `oauth/authorize`, `oauth/token`, `oauth/token/refresh`, `oauth/tokens` muncul. ✅
+- Middleware `oauth/authorize` = `web, auth`. ✅
+- Client uji tersimpan: `id=1, name="ESS (dev)", public(secret null)=yes, revoked=0`. ✅
+- App tetap boot; route & login existing tidak berubah. ✅
+
+**Belum dikerjakan (sengaja, masuk Tahap 3):**
+
+- `/oauth/userinfo` (identitas dari API karyawan).
+- Tabel `sso_clients` + admin panel + flag **trusted** untuk skip layar consent pada
+  app first-party (saat ini consent screen Passport masih tampil).
+- Pembatasan route manajemen client bawaan Passport (`/oauth/clients`, `/oauth/tokens`)
+  — akan diganti admin panel sendiri.
+
+**File yang berubah:** `app/Providers/AuthServiceProvider.php`
+(+ `resources/views/vendor/passport/**` hasil publish, + 1 row `oauth_clients` di DB).
+
+---
+
+## 16. Glosarium
 
 - **IdP (Identity Provider):** aplikasi pusat yang mengautentikasi user — di sini SSB.
 - **SP / Client (Service Provider):** aplikasi yang mempercayakan login ke IdP — ESS, Warehouse.
