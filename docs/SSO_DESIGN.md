@@ -1,6 +1,6 @@
 # Rancangan SSO — SSB sebagai Identity Provider (IdP)
 
-> Status: **Tahap 1–3 SELESAI** (OAuth aktif, userinfo + admin client + skip-consent) — Tahap 4 (integrasi ESS) berikutnya
+> Status: **Tahap 1–3 SELESAI** + **Tahap 4 paket integrasi ESS disiapkan** (IdP terverifikasi siap; penerapan di repo ESS) — Tahap 5 (Warehouse + logout) berikutnya
 > Tanggal: 2026-06-06
 > Aplikasi utama (IdP): **SSB-PROJECT** (Laravel 8 / PHP 8)
 > Client awal (SP): **ESS**, **Warehouse**
@@ -198,11 +198,12 @@ User klik logout di ESS
 - [x] Batasi route manajemen client bawaan Passport (`/oauth/clients`, `/oauth/personal-access-tokens` tidak diregistrasi) **[Tahap 3]**
 - [ ] Route `/sso/logout` (front-channel logout) **[Tahap 5]**
 
-### Di tiap Client (ESS, Warehouse)
-- [ ] `composer require laravel/socialite` + provider custom "ssb"
-- [ ] Config `client_id`, `client_secret`, `redirect_uri`, base URL SSB
-- [ ] Callback: find-or-create by NIK + mapping role lokal + session
-- [ ] Middleware redirect-to-SSO + tombol "Login dengan SSB"
+### Di tiap Client (ESS, Warehouse) — template tersedia di `docs/client-integration/laravel/`
+- [x] Client OAuth2 + PKCE (tanpa paket tambahan, pakai HTTP client bawaan) **[Tahap 4]**
+- [x] Config `client_id`, `client_secret`, `redirect_uri`, base URL SSB (`config-services.php`, `.env`) **[Tahap 4]**
+- [x] Callback: find-or-create by NIK + hook mapping role lokal + session (`SsbSsoController`) **[Tahap 4]**
+- [x] Route + tombol "Login dengan SSB" + catatan middleware redirect-to-SSO (`routes-web.php`) **[Tahap 4]**
+- [ ] **Terapkan & uji di repo ESS** (tempel file, set `.env`, jalankan) — dikerjakan di sisi ESS
 
 ---
 
@@ -225,7 +226,7 @@ User klik logout di ESS
 | 1 ✅ | Pasang Passport + tabel `oauth_*` + guard `oauth` (belum diaktifkan ke publik) — **SELESAI** | nol (terverifikasi) |
 | 2 ✅ | Aktifkan `/oauth/authorize` & `/oauth/token`, reuse login session existing — **SELESAI** | nol (terverifikasi) |
 | 3 ✅ | `/oauth/userinfo` (identitas) + `sso_clients` + admin panel + skip-consent trusted — **SELESAI** | nol (terverifikasi) |
-| 4 | Integrasi 1 client pilot (ESS) — terisolasi | nol |
+| 4 ◑ | Paket integrasi ESS disiapkan (`docs/client-integration/laravel/`) + IdP terverifikasi siap — **penerapan di repo ESS** | nol (terisolasi) |
 | 5 | Warehouse menyusul + front-channel logout | nol |
 | 6 | (Opsional) Single Logout penuh & migrasi API existing bertahap | dikontrol |
 
@@ -441,7 +442,42 @@ lewat admin panel.
 
 ---
 
-## 17. Glosarium
+## 17. Catatan Implementasi Tahap 4 (2026-06-06)
+
+**Tujuan:** menyiapkan integrasi pilot **ESS** (sisi client). Karena ESS adalah
+aplikasi terpisah, deliverable di repo IdP ini adalah **paket kode + panduan
+siap-tempel** + verifikasi bahwa IdP siap melayani alurnya.
+
+**Lokasi paket:** `docs/client-integration/laravel/`
+
+| File | Fungsi |
+|---|---|
+| `README.md` | Panduan langkah-demi-langkah + diagram alur |
+| `SsbSsoController.php` | Controller client: redirect (PKCE+state), callback (tukar token, userinfo, find-or-create by NIK, hook role lokal), logout lokal |
+| `config-services.php` | Blok `services.ssb` (base_url, client_id, secret, redirect) |
+| `routes-web.php` | Route `ssb.redirect` / `ssb.callback` / `ssb.logout` |
+| `env.example.txt` | Variabel `.env` ESS |
+| `migration_users_nik.php` | Skema user lokal ESS (kolom `nik` unik) |
+
+**Pola teknis:** OAuth2 Authorization Code **+ PKCE (S256)**, validasi `state`,
+tanpa dependency tambahan (HTTP client bawaan Laravel). Role **tidak** diambil
+dari SSB — ada hook `mapLocalRole()` agar ESS menetapkan role lokalnya sendiri.
+
+**Client dev di SSB:** "ESS (dev)" — `client_id=1`, public/PKCE, **trusted**
+(skip consent), redirect `http://localhost:8001/auth/ssb/callback`.
+
+**Verifikasi kesiapan IdP (via HTTP kernel, sudah dijalankan):**
+
+- `GET /oauth/authorize` (guest) → **302** ke halaman login existing (APP_URL). ✅
+- `GET /api/oauth/userinfo` tanpa token + `Accept: application/json` →
+  **401** `{"message":"Unauthenticated."}`. ✅ (Client memanggil dgn `acceptJson()`.)
+
+**Belum dikerjakan (di luar repo ini):** penerapan & uji end-to-end di repo ESS
+(tempel file, set `.env`, jalankan ESS:8001 ↔ SSB:8000).
+
+---
+
+## 18. Glosarium
 
 - **IdP (Identity Provider):** aplikasi pusat yang mengautentikasi user — di sini SSB.
 - **SP / Client (Service Provider):** aplikasi yang mempercayakan login ke IdP — ESS, Warehouse.
