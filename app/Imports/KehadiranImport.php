@@ -22,16 +22,41 @@ class KehadiranImport implements ToCollection, WithHeadingRow
             $rowData['row_number'] = $rowNumber;
             $rowData['valid'] = true;
             $errorMessages = [];
+
+            // Convert numeric dates from Excel if needed
+            $tanggal = $row['tanggal'] ?? null;
+            if (is_numeric($tanggal)) {
+                try {
+                    $tanggal = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($tanggal)->format('Y-m-d');
+                    $rowData['tanggal'] = $tanggal;
+                } catch (\Exception $e) {}
+            }
+
+            // Convert numeric time from Excel if needed (stored as decimal fraction of day)
+            $jam = $row['jam'] ?? null;
+            if (is_numeric($jam)) {
+                try {
+                    $timeValue = floatval($jam);
+                    if ($timeValue > 0 && $timeValue < 1) {
+                        $seconds = $timeValue * 86400; // 24 * 60 * 60
+                        $hours = intval($seconds / 3600);
+                        $minutes = intval(($seconds % 3600) / 60);
+                        $jam = sprintf('%02d:%02d', $hours, $minutes);
+                        $rowData['jam'] = $jam;
+                    }
+                } catch (\Exception $e) {}
+            }
+
             // Validasi required fields
-            if ($msg = $this->validateRequired($row['tanggal'] ?? null, 'Tanggal')) {
+            if ($msg = $this->validateRequired($tanggal ?? null, 'Tanggal')) {
                 $errorMessages[] = "Tab 1 - Baris {$rowNumber}: $msg";
-            } elseif ($msg = $this->validateDateFormat($row['tanggal'], 'Tanggal')) {
+            } elseif ($msg = $this->validateDateFormat($tanggal, 'Tanggal')) {
                 $errorMessages[] = "Tab 1 - Baris {$rowNumber}: $msg";
             }
 
-            if ($msg = $this->validateRequired($row['jam'] ?? null, 'Jam')) {
+            if ($msg = $this->validateRequired($jam ?? null, 'Jam')) {
                 $errorMessages[] = "Tab 1 - Baris {$rowNumber}: $msg";
-            } elseif ($msg = $this->validateTimeFormat($row['jam'], 'Jam')) {
+            } elseif ($msg = $this->validateTimeFormat($jam, 'Jam')) {
                 $errorMessages[] = "Tab 1 - Baris {$rowNumber}: $msg";
             }
 

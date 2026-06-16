@@ -78,6 +78,30 @@
                     </div>
                 </div>
                 <hr>
+                <div id="preview-section" style="display:none;">
+                    <div class="alert alert-info">
+                        <strong>Preview Data:</strong>
+                        <small id="preview-info"></small>
+                    </div>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-bordered" id="preview-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>No</th>
+                                    <th>NIK (nik_lama)</th>
+                                    <th>Tanggal Scan</th>
+                                    <th>Tanggal</th>
+                                    <th>Jam</th>
+                                    <th>Status</th>
+                                    <th>Validasi</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div id="preview-errors" style="display:none;" class="alert alert-warning mt-3"></div>
+                </div>
+                <button type="button" class="btn btn-danger" name="tbl_preview" id="tbl_preview" style="display:none;"><i class="fa fa-eye"></i> Preview</button>
                 <button class="btn btn-primary" name="tbl_import" id="tbl_import"><i class="fa fa-upload"></i> Import Data</button>
                 <hr>
             </div>
@@ -151,6 +175,15 @@
             });
         });
 
+        // Initialize import button as disabled
+        $('#tbl_import').prop('disabled', true).addClass('disabled').css('opacity', '0.6');
+
+        // Preview button click handler
+        $('#tbl_preview').click(function(e) {
+            e.preventDefault();
+            showPreview();
+        });
+
     });
     var _validFileExtensions = [".csv", ".xlsx"];
     var loadFile = function(oInput) {
@@ -172,13 +205,99 @@
                 if (!blnValid) {
                     alert("Maaf, " + sFileName + " tidak valid, jenis file yang boleh di upload adalah : " + _validFileExtensions.join(", "));
                     oInput.value = "";
+                    $('#preview-section').hide();
                     return false;
+                } else {
+                    // Show preview button when file is selected
+                    $('#tbl_preview').show();
                 }
             }
 
         }
         return true;
 
+    };
+
+    // Preview data
+    var showPreview = function() {
+        var fileInput = document.getElementById('file_imp');
+        if (!fileInput.files[0]) {
+            alert('Silakan pilih file terlebih dahulu');
+            return;
+        }
+
+        let formData = new FormData(document.getElementById('formImport'));
+        $.ajax({
+            url: "{{ url('hrd/absensi/previewdataabsensi') }}",
+            type: "POST",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+            },
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                if (response.success) {
+                    renderPreview(response.preview, response.totalRows, response.errorCount);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Preview',
+                        text: response.message || 'Terjadi kesalahan saat preview.'
+                    });
+                }
+            },
+            error: function (xhr) {
+                console.log(xhr.responseText);
+                Swal.fire({
+                    icon: 'error',
+                    title: "Gagal!",
+                    text: "Terjadi kesalahan saat membaca preview data"
+                });
+            }
+        });
+    };
+
+    var renderPreview = function(rows, totalRows, errorCount) {
+        var tbody = $('#preview-table tbody');
+        tbody.empty();
+
+        rows.forEach(function(row, index) {
+            var statusClass = row.valid ? 'success' : 'danger';
+            var statusIcon = row.valid ? '<i class="fa fa-check text-success"></i>' : '<i class="fa fa-times text-danger"></i>';
+            var errorMsg = row.valid ? '<span class="text-success">✓ Valid</span>' : '<span class="text-danger">' + row.errors.join(', ') + '</span>';
+
+            var tr = `<tr>
+                <td>${index + 1}</td>
+                <td>${row.nik_lama}</td>
+                <td>${row.tanggal_scan}</td>
+                <td>${row.tanggal}</td>
+                <td>${row.jam}</td>
+                <td>${row.status}</td>
+                <td>${errorMsg}</td>
+            </tr>`;
+            tbody.append(tr);
+        });
+
+        // Show preview section
+        $('#preview-info').text(`Total: ${totalRows} baris | Errors: ${errorCount} baris`);
+        $('#preview-section').show();
+
+        // Enable/Disable import button based on error count
+        if (errorCount > 0) {
+            $('#tbl_import').prop('disabled', true).addClass('disabled').css('opacity', '0.6');
+            var errorSummary = `<strong>⚠ Ditemukan ${errorCount} error pada data:</strong><ul style="margin: 10px 0; padding-left: 20px;">`;
+            rows.forEach(function(row, index) {
+                if (!row.valid) {
+                    errorSummary += `<li>Baris ${index + 1}: ${row.errors.join(', ')}</li>`;
+                }
+            });
+            errorSummary += `</ul>`;
+            $('#preview-errors').html(errorSummary).show();
+        } else {
+            $('#tbl_import').prop('disabled', false).removeClass('disabled').css('opacity', '1');
+            $('#preview-errors').hide();
+        }
     };
     var goIDFingerKaryawan = function()
     {

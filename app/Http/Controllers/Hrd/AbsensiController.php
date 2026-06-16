@@ -8,17 +8,14 @@ use App\Helpers\Hrdhelper;
 use App\Imports\AbsensiImport;
 use App\Models\HRD\DepartemenModel;
 use App\Models\HRD\CutiModel;
-use App\Models\HRD\DiklatModel;
 use App\Models\HRD\IzinModel;
 use App\Models\HRD\KaryawanModel;
-use App\Models\HRD\PelatihanHeaderModel;
 use App\Models\HRD\PerdisModel;
 use App\Models\HRD\SetupHariLiburModel;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class AbsensiController extends Controller
@@ -233,7 +230,9 @@ class AbsensiController extends Controller
                         }
 
                     } else {
-                        $html .= "<td class='text-center' style='".$blok_wrn."'>".$ket_hadir_in.$ket_ishoma_out.$ket_ishoma_in.$ket_hadir_out."</td>";
+                        // Format jadwal dengan style modern (Opsi 4)
+                        $jadwal_html = $this->formatJadwalModern($ket_hadir_in, $ket_ishoma_out, $ket_ishoma_in, $ket_hadir_out, $filter_tanggal);
+                        $html .= "<td class='text-center' style='".$blok_wrn."'>".$jadwal_html."</td>";
                     }
 
                     // $html .= "<td style='".$blok_wrn."'>".$ket_hadir_in.$ket_hadir_out."</td>";
@@ -265,9 +264,11 @@ class AbsensiController extends Controller
         return view("HRD.absensi.frmimport");
     }
 
-    public function doImportAbsensi(Request $request)
+    public function previewImportAbsensi(Request $request)
     {
-        $file = $request->file('file_imp');
+        $request->validate([
+            'file_imp' => 'required|mimes:xlsx,csv,xls'
+        ]);
 
         if (!$request->hasFile('file_imp')) {
             return response()->json([
@@ -276,74 +277,313 @@ class AbsensiController extends Controller
             ], 400);
         }
 
-        // Validasi nama file (opsional, sesuai template)
-        $filename = $file->getClientOriginalName();
-        if (!str_contains($filename, 'templateAbsensiKaryawan')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Nama file tidak sesuai dengan template. Pastikan nama file mengandung "templateAbsensiKaryawan".'
-            ]);
-        }
-
-        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
-        $firstSheet = $spreadsheet->getSheet(0);
-        $sheetData = $firstSheet->toArray();
-
-        // Buang baris kosong total
-        $dataRows = array_filter($sheetData, function($row) {
-            return !empty(array_filter($row)); // at least one non-empty cell
-        });
-
-        if (count($dataRows) <= 1) {
-            return response()->json([
-                'success' => false,
-                'message' => 'File Excel tidak berisi data.'
-            ]);
-        }
-
-        DB::beginTransaction();
         try {
-            $import = new AbsensiImport(false);
-            Excel::import($import, $request->file('file_imp'));
+            $file = $request->file('file_imp');
+            $extension = strtolower($file->getClientOriginalExtension());
 
-            if (!$import->isAllValid()) {
-                DB::rollBack();
-                $rs = response()->json([
+            // Move file to temp directory
+            $fileName = 'import_absensi_' . time() . '.' . $extension;
+            $tempPath = storage_path('app/temp');
+            if (!file_exists($tempPath)) {
+                mkdir($tempPath, 0755, true);
+            }
+            $file->move($tempPath, $fileName);
+            $fullPath = $tempPath . DIRECTORY_SEPARATOR . $fileName;
+
+            if (!file_exists($fullPath)) {
+                return response()->json([
                     'success' => false,
-                    'message' => $import->getErrors()
+                    'message' => 'Gagal membaca file: File gagal dipindahkan ke direktori sementara.'
                 ]);
-                // return back()->withErrors($import->getErrors())->withInput();
-            } else {
-                // ✅ Validasi tanggal duplikat
-                $existingDates = $import->getValidationDate();
-                if (count($existingDates) > 0) {
+            }
+
+            // Load spreadsheet
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($fullPath);
+            $firstSheet = $spreadsheet->getSheet(0);
+            $sheetData = $firstSheet->toArray();
+
+            // Skip header dan filter data kosong
+            $dataRows = array_slice($sheetData, 1);
+            $dataRows = array_filter($dataRows, function($row) {
+                return !empty(array_filter($row));
+            });
+
+            if (count($dataRows) <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File Excel tidak berisi data.'
+                ]);
+            }
+
+            // Ambil maksimal 5 baris untuk preview
+            $previewRows = array_slice($dataRows, 0, 5);
+            $processedRows = [];
+            $totalRows = count($dataRows);
+            $errorCount = 0;
+
+            foreach ($previewRows as $row) {
+                // Struktur kolom: tanggal_scan, tanggal, jam, nik_lama, i_o, lokasi_id, dhuhur, ashar
+                $tanggal_scan = $row[0] ?? ''; // Kolom A
+                $tanggal = $row[1] ?? ''; // Kolom B
+                $jam = $row[2] ?? ''; // Kolom C
+                $nik_lama = $row[3] ?? ''; // Kolom D
+                $io = $row[4] ?? ''; // Kolom E
+
+                $errors = [];
+
+                // Handle numeric dates from Excel (tanggal_scan) - no validation needed
+                if (is_numeric($tanggal_scan)) {
+                    try {
+                        $tanggal_scan = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($tanggal_scan)->format('Y-m-d');
+                    } catch (\Exception $e) {}
+                }
+
+                // Handle numeric dates from Excel (tanggal)
+                if (is_numeric($tanggal)) {
+                    try {
+                        $tanggal = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($tanggal)->format('Y-m-d');
+                    } catch (\Exception $e) {}
+                }
+
+                // Handle numeric time values from Excel (stored as decimal fraction of day)
+                if (is_numeric($jam)) {
+                    try {
+                        $timeValue = floatval($jam);
+                        if ($timeValue > 0 && $timeValue < 1) {
+                            $seconds = $timeValue * 86400; // 24 * 60 * 60
+                            $hours = intval($seconds / 3600);
+                            $minutes = intval(($seconds % 3600) / 60);
+                            $jam = sprintf('%02d:%02d', $hours, $minutes);
+                        }
+                    } catch (\Exception $e) {}
+                }
+
+                // Validasi tanggal format YYYY-MM-DD
+                if (empty($tanggal)) {
+                    $errors[] = 'Tanggal kosong';
+                } else {
+                    $d = \DateTime::createFromFormat('Y-m-d', $tanggal);
+                    if (!$d || $d->format('Y-m-d') !== $tanggal) {
+                        $errors[] = 'Format tanggal harus yyyy-mm-dd';
+                    }
+                }
+
+                // Validasi jam format HH:MM
+                if (empty($jam)) {
+                    $errors[] = 'Jam kosong';
+                } else {
+                    $t = \DateTime::createFromFormat('H:i', $jam);
+                    if (!$t || $t->format('H:i') !== $jam) {
+                        $errors[] = 'Format jam harus hh:mm';
+                    }
+                }
+
+                // Validasi NIK
+                if (empty($nik_lama)) {
+                    $errors[] = 'NIK kosong';
+                }
+
+                // Validasi I/O
+                if (empty($io)) {
+                    $errors[] = 'I/O kosong';
+                }
+
+                if (!empty($errors)) {
+                    $errorCount++;
+                }
+
+                $processedRows[] = [
+                    'nik_lama' => $nik_lama,
+                    'tanggal_scan' => $tanggal_scan,
+                    'tanggal' => $tanggal,
+                    'jam' => $jam,
+                    'io' => $io,
+                    'status' => $io === 'C/Masuk' ? 'Masuk' : ($io === 'C/Keluar' ? 'Keluar' : $io),
+                    'valid' => empty($errors),
+                    'errors' => $errors
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'preview' => $processedRows,
+                'totalRows' => $totalRows,
+                'errorCount' => $errorCount,
+                'message' => "Preview data (menampilkan 5 baris dari $totalRows total baris)"
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Preview failed: '.$e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error membaca file: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function doImportAbsensi(Request $request)
+    {
+        $request->validate([
+            'file_imp' => 'required|mimes:xlsx,csv,xls'
+        ]);
+
+        if (!$request->hasFile('file_imp')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada file yang dikirim.'
+            ], 400);
+        }
+
+        try {
+            $file = $request->file('file_imp');
+            $extension = strtolower($file->getClientOriginalExtension());
+
+            // Validasi nama file (opsional, sesuai template)
+            $filename = $file->getClientOriginalName();
+            if (!str_contains($filename, 'templateAbsensiKaryawan')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nama file tidak sesuai dengan template. Pastikan nama file mengandung "templateAbsensiKaryawan".'
+                ]);
+            }
+
+            // Move file to temp directory
+            $fileName = 'import_absensi_' . time() . '.' . $extension;
+            $tempPath = storage_path('app/temp');
+            if (!file_exists($tempPath)) {
+                mkdir($tempPath, 0755, true);
+            }
+            $file->move($tempPath, $fileName);
+            $fullPath = $tempPath . DIRECTORY_SEPARATOR . $fileName;
+
+            if (!file_exists($fullPath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal membaca file: File gagal dipindahkan ke direktori sementara.'
+                ]);
+            }
+
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($fullPath);
+            $firstSheet = $spreadsheet->getSheet(0);
+            $sheetData = $firstSheet->toArray();
+
+            // Buang baris kosong total
+            $dataRows = array_filter($sheetData, function($row) {
+                return !empty(array_filter($row)); // at least one non-empty cell
+            });
+
+            if (count($dataRows) <= 1) {
+                @unlink($fullPath);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File Excel tidak berisi data.'
+                ]);
+            }
+
+            DB::beginTransaction();
+            try {
+                $import = new AbsensiImport(false);
+                Excel::import($import, $fullPath);
+
+                if (!$import->isAllValid()) {
                     DB::rollBack();
                     $rs = response()->json([
                         'success' => false,
-                        'message' => 'Tanggal berikut sudah ada: ' . implode(', ', $existingDates)
+                        'message' => $import->getErrors()
                     ]);
                 } else {
-                    // ✅ Semua valid, simpan ke DB
-                    $import->saveAllToDB();
-                    DB::commit();
-                    $rs = response()->json([
-                        'success' => true,
-                        'message' => "Import data absensi karyawan berhasil.",
-                    ]);
+                    // ✅ Validasi tanggal duplikat
+                    $existingDates = $import->getValidationDate();
+                    if (count($existingDates) > 0) {
+                        DB::rollBack();
+                        $rs = response()->json([
+                            'success' => false,
+                            'message' => 'Tanggal berikut sudah ada: ' . implode(', ', $existingDates)
+                        ]);
+                    } else {
+                        // ✅ Semua valid, simpan ke DB
+                        $import->saveAllToDB();
+                        DB::commit();
+                        $rs = response()->json([
+                            'success' => true,
+                            'message' => "Import data absensi karyawan berhasil.",
+                        ]);
+                    }
                 }
+            } catch (Throwable $e) {
+                DB::rollBack();
+                Log::error('Import failed: '.$e->getMessage());
+                $rs = response()->json([
+                    'success' => false,
+                    'message' => "Terdapat error pada proses import data. error: ".$e->getMessage()
+                ]);
+            } finally {
+                // Clean up temp file
+                @unlink($fullPath);
             }
 
-            // Excel::import(new AbsensiImport, $request->file('file_imp'));
-            // return back()->withStatus('Excel file import successfully');
+            return $rs;
         } catch (Throwable $e) {
-            DB::rollBack(); // Rollback transaction on error
-            // Log the error for debugging
             Log::error('Import failed: '.$e->getMessage());
-            $rs = response()->json([
+            return response()->json([
                 'success' => false,
-                'message' => "Terdapat error pada proses import data. error: ".$e->getMessage()
+                'message' => 'Error membaca file: ' . $e->getMessage()
             ]);
         }
-        return $rs;
+    }
+
+    private function formatJadwalModern($masuk, $ishoma_keluar, $ishoma_masuk, $pulang, $tanggal)
+    {
+        if (empty($masuk) && empty($pulang)) {
+            return '';
+        }
+
+        $jam_masuk = $masuk;
+        $jam_pulang = $pulang;
+        $jam_ishoma_masuk = str_replace(' | ', '', $ishoma_masuk);
+        $jam_ishoma_keluar = str_replace('-', '', $ishoma_keluar);
+
+        $html = '<div class="schedule-card">';
+
+        if (!empty($jam_masuk)) {
+            $html .= '<div class="schedule-shift">';
+            $html .= '<span class="shift-badge pagi">🟦</span>';
+            $html .= '<span class="shift-label">Pagi:</span>';
+            $html .= '<span class="shift-time">' . $jam_masuk . '-' . $jam_ishoma_keluar . '</span>';
+
+            if (!empty($jam_ishoma_keluar)) {
+                $durasi = $this->hitungDurasi($jam_masuk, $jam_ishoma_keluar);
+                $html .= '<span class="shift-duration">(' . $durasi . 'h)</span>';
+            }
+            $html .= '</div>';
+        }
+
+        if (!empty($jam_ishoma_masuk) && !empty($jam_pulang)) {
+            $html .= '<div class="schedule-shift">';
+            $html .= '<span class="shift-badge siang">🟩</span>';
+            $html .= '<span class="shift-label">Siang:</span>';
+            $html .= '<span class="shift-time">' . $jam_ishoma_masuk . '-' . $jam_pulang . '</span>';
+
+            $durasi = $this->hitungDurasi($jam_ishoma_masuk, $jam_pulang);
+            $html .= '<span class="shift-duration">(' . $durasi . 'h)</span>';
+            $html .= '</div>';
+        }
+
+        $html .= '</div>';
+        return $html;
+    }
+
+    private function hitungDurasi($jam_mulai, $jam_akhir)
+    {
+        try {
+            $mulai = \DateTime::createFromFormat('H:i', $jam_mulai);
+            $akhir = \DateTime::createFromFormat('H:i', $jam_akhir);
+
+            if ($mulai && $akhir) {
+                $diff = $akhir->diff($mulai);
+                return $diff->h;
+            }
+        } catch (\Exception $e) {
+            return '';
+        }
     }
 }

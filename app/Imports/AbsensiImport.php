@@ -11,10 +11,11 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 class AbsensiImport implements WithMultipleSheets
 {
     protected $sheetInstances = [];
+
     public function sheets(): array
     {
-         $this->sheetInstances = [
-            'Daftar Kehadiran Karyawan' => new KehadiranImport()
+        $this->sheetInstances = [
+            0 => new KehadiranImport() // Use first sheet index instead of name
         ];
 
         return $this->sheetInstances;
@@ -23,7 +24,7 @@ class AbsensiImport implements WithMultipleSheets
     public function getErrors()
     {
         return array_merge(
-            $this->sheetInstances['Daftar Kehadiran Karyawan']->getErrors()
+            $this->sheetInstances[0]->getErrors()
         );
     }
 
@@ -60,21 +61,20 @@ class AbsensiImport implements WithMultipleSheets
 
     public function saveAllToDB()
     {
-        foreach ($this->sheetInstances['Daftar Kehadiran Karyawan']->getRows() as $row) {
+        foreach ($this->sheetInstances[0]->getRows() as $row) {
             $nik_lama = $row['nik_lama'] ?? null;
             if (!$nik_lama) continue;
 
             $getDept = KaryawanModel::where('nik_lama', $row["nik_lama"])->first();
             if(!empty($getDept->id_departemen))
             {
-                // dd($row);
                 $tanggal_scan = $row['tanggal'];
                 $temp_waktu_scan = $row['jam'];
                 AbsensiModel::create([
                     "id_departemen" => $getDept->id_departemen,
                     "nik_lama" => $row['nik_lama'],
-                    "tanggal" => $tanggal_scan, //$row['tglwaktu'],
-                    "jam" => $temp_waktu_scan, //$row['tglwaktu'],
+                    "tanggal" => $tanggal_scan,
+                    "jam" => $temp_waktu_scan,
                     "status" => $row['i_o'],
                     "lokasi_id" => $row['lokasi_id'],
                     "user_id" => auth()->user()->id,
@@ -82,14 +82,12 @@ class AbsensiImport implements WithMultipleSheets
                     'ashar' => $row['ashar']
                 ]);
             }
-
         }
-
     }
 
     public function getValidationDate()
     {
-        $importedDates = collect($this->sheetInstances['Daftar Kehadiran Karyawan']->getRows()) // ambil data hasil parsing
+        $importedDates = collect($this->sheetInstances[0]->getRows())
             ->pluck('tanggal')
             ->unique();
 

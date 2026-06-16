@@ -954,6 +954,7 @@ Route::group(['middleware' => 'auth'], function()
         Route::get('/', 'Hrd\AbsensiController@index');
         Route::post('getAbsensi', 'Hrd\AbsensiController@list_data');
         Route::get('importdataabsensi', 'Hrd\AbsensiController@import_data_absensi');
+        Route::post('previewdataabsensi', 'Hrd\AbsensiController@previewImportAbsensi');
         Route::post('storedataabsensi', 'Hrd\AbsensiController@doImportAbsensi');
     });
 

@@ -2,34 +2,42 @@
 @section('content')
 <style>
     .spinner-div {
-    position: absolute;
-    display: none;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    text-align: center;
-    background-color: rgba(255, 255, 255, 0.8);
-    z-index: 2;
+        position: absolute;
+        display: none;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.8);
+        z-index: 2;
     }
+
     .btn-circle.btn-md {
-            width: 40px;
-            height: 40px;
-            padding: 7px 10px;
-            border-radius: 25px;
-            font-size: 12px;
-            text-align: center;
-        }
+        width: 40px;
+        height: 40px;
+        padding: 7px 10px;
+        border-radius: 25px;
+        font-size: 12px;
+        text-align: center;
+    }
 
     .table-responsive {
         overflow-x: auto;
+        border-radius: 5px;
     }
+
+    .table {
+        margin-bottom: 0;
+    }
+
     .table thead th:first-child,
     .table tbody td:first-child {
         position: sticky;
         left: 0;
         background-color: #fff;
         z-index: 2;
+        font-weight: 600;
     }
 
     .table thead th {
@@ -37,10 +45,151 @@
         top: 0;
         background-color: #f8f9fa;
         z-index: 3;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
     }
 
     .table tbody td:first-child {
         z-index: 1;
+        font-weight: 500;
+        background-color: #f9f9f9;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+
+    .table td {
+        text-align: center;
+        padding: 8px !important;
+        font-size: 13px;
+    }
+
+    .table td:first-child {
+        text-align: left;
+        padding: 10px !important;
+    }
+
+    /* Filter Form Improvements */
+    .form-control, .form-control:focus {
+        border-radius: 4px;
+        font-size: 13px;
+    }
+
+    .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    label {
+        font-size: 13px;
+        color: #333;
+    }
+
+    .btn {
+        font-size: 13px;
+        font-weight: 500;
+        border-radius: 4px;
+    }
+
+    .btn-primary, .btn-info {
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+    }
+
+    .btn-info:hover {
+        background-color: #0062cc;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+    }
+
+    /* Schedule Card Styling (Opsi 4) */
+    .schedule-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+        border: 1px solid #e8f0ff;
+        border-radius: 8px;
+        padding: 8px 10px;
+        margin: 0;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .schedule-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+        border-color: #d0e0ff;
+    }
+
+    .schedule-shift {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        line-height: 1.4;
+        padding: 4px 0;
+    }
+
+    .shift-badge {
+        font-size: 10px;
+        display: inline-block;
+        min-width: 12px;
+    }
+
+    .shift-badge.pagi {
+        color: #0066ff;
+    }
+
+    .shift-badge.siang {
+        color: #00aa00;
+    }
+
+    .shift-label {
+        font-weight: 600;
+        color: #555;
+        min-width: 35px;
+        white-space: nowrap;
+    }
+
+    .shift-time {
+        color: #333;
+        font-weight: 500;
+        font-family: 'Courier New', monospace;
+    }
+
+    .shift-duration {
+        color: #999;
+        font-size: 10px;
+        font-style: italic;
+        margin-left: auto;
+        white-space: nowrap;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .schedule-card {
+            padding: 8px 10px;
+            font-size: 11px;
+        }
+
+        .schedule-shift {
+            font-size: 10px;
+        }
+
+        .shift-label {
+            min-width: 30px;
+        }
+
+        .shift-time {
+            font-size: 10px;
+        }
     }
 </style>
 <div class="navbar-breadcrumb">
@@ -74,64 +223,75 @@
             <div class="iq-card-body" style="width:100%; height:auto">
                 <form method="post">
                 {{ csrf_field() }}
-                <div class="row justify-content-between">
-                    <div class="col-sm-12 col-md-2">
-                        <select class="form-control" name="pil_bulan" id="pil_bulan" style="width: 100%">
-                        <option value="0">Pilihan Bulan</option>
-                        @foreach($list_bulan as $key => $value)
-                        @if($key==date("m"))
-                        <option value="{{ $key }}" selected>{{ $value }}</option>
-                        @else
-                        <option value="{{ $key }}">{{ $value }}</option>
-                        @endif
-                        @endforeach
+
+                <!-- Filter Section -->
+                <div class="row mb-4">
+                    <div class="col-lg-2 col-md-3 col-sm-12 mb-3">
+                        <label class="d-block font-weight-bold mb-2">Bulan</label>
+                        <select class="form-control" name="pil_bulan" id="pil_bulan">
+                            <option value="0">Pilih Bulan</option>
+                            @foreach($list_bulan as $key => $value)
+                            @if($key==date("m"))
+                            <option value="{{ $key }}" selected>{{ $value }}</option>
+                            @else
+                            <option value="{{ $key }}">{{ $value }}</option>
+                            @endif
+                            @endforeach
                         </select>
                     </div>
-                    <div class="col-sm-12 col-md-1">
+                    <div class="col-lg-1 col-md-2 col-sm-12 mb-3">
+                        <label class="d-block font-weight-bold mb-2">Tahun</label>
                         <input type="text" name="inp_tahun" id="inp_tahun" value="{{ date('Y') }}" class="form-control" maxlength="4" required>
                     </div>
-                    <div class="col-sm-6 col-md-3 float-left">
-
-                        <div class="input-group">
-                            <select class="form-control" name="pil_departemen" id="pil_departemen">
-                                <option value="">Pilihan Departemen</option>
-                                @foreach($all_departemen as $dept)
-                                <option value="{{ $dept->id }}">{{ $dept->nm_dept }} | {{ $dept->get_master_divisi->nm_divisi }}</option>
-                                @endforeach
-                            </select>
-
-                        </div>
+                    <div class="col-lg-4 col-md-5 col-sm-12 mb-3">
+                        <label class="d-block font-weight-bold mb-2">Departemen</label>
+                        <select class="form-control" name="pil_departemen" id="pil_departemen">
+                            <option value="">Pilih Departemen</option>
+                            @foreach($all_departemen as $dept)
+                            <option value="{{ $dept->id }}">{{ $dept->nm_dept }} | {{ $dept->get_master_divisi->nm_divisi }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                    <div class="col-sm-6 col-md-2 float-left">
-                        <button type="button" class="btn btn-primary"  onClick="actFilter();"><i class="fa fa-search"></i> Filter</button>
+                    <div class="col-lg-3 col-md-2 col-sm-12 mb-3 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary w-100" onClick="actFilter();"><i class="fa fa-search mr-2"></i>Filter</button>
                     </div>
-                    <div class="col-sm-6 col-md-3">
-                        <div class="user-list-files d-flex float-right">
-                            <a href="{{ url('hrd/absensi/importdataabsensi') }}" target="_new"><i class="fa fa-upload"></i> Import Data Absensi</a>
+                    <div class="col-lg-2 col-md-12 col-sm-12 mb-3 d-flex align-items-end">
+                        <a href="{{ url('hrd/absensi/importdataabsensi') }}" target="_new" class="btn btn-info w-100"><i class="fa fa-upload mr-2"></i>Import Data</a>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <!-- Legend Section -->
+                <div class="row mb-4">
+                    <div class="col-lg-12">
+                        <h6 class="font-weight-bold mb-3">Keterangan Warna:</h6>
+                        <div class="row">
+                            <div class="col-lg-4 col-md-6 mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 20px; height: 20px; background-color: #1764bd; border-radius: 3px; margin-right: 10px;"></div>
+                                    <span>Hari Libur Bersama</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 20px; height: 20px; background-color: #A0A0A0; border-radius: 3px; margin-right: 10px;"></div>
+                                    <span>Hari Minggu/Ahad</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 mb-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge badge-info" style="height: 20px; padding: 5px 8px;">C = Cuti | I = Izin | P = Dinas | T = Training</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <hr>
-                <div class="row justify-content-center">
+
+                <!-- Data Table Section -->
+                <div class="row">
                     <div class="col-lg-12">
                         <div id="spinner-div" class="pt-5 justify-content-center spinner-div"><div class="spinner-border text-primary" role="status"></div></div>
                         <div class="iq-card table-responsive" id="data_list"></div>
-                        <table class="table table-sm">
-                           <tr>
-                            <td style='height: 30px'></td></tr><tr>
-                                <td style='background-color: #1764bd'></td>
-                                <td>Hari Libur Bersama</td>
-                                </tr>
-                                <tr>
-                                <td style='background-color:  #c44a12'></td>
-                                <td>Hari Minggu/Ahad</td>
-                                </tr>
-                                <tr>
-                                <td style='background-color:  #bd9f17'></td>
-                                <td>C = Cuti; I = Izin; P = Perjalanan Dinas; T = Training</td>
-                                </tr>
-                                </table>";
-                        </table>
                     </div>
                 </div>
                 </form>
