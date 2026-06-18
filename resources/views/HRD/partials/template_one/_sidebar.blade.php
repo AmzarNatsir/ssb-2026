@@ -1,3 +1,11 @@
+<style>
+    /* Batasi tinggi area scroll sidebar agar menu/submenu terbawah tetap terjangkau */
+    .iq-sidebar #sidebar-scrollbar {
+        height: calc(100vh - 90px) !important;
+        max-height: calc(100vh - 90px) !important;
+        overflow-y: auto;
+    }
+</style>
 <div id="sidebar-scrollbar">
     <nav class="iq-sidebar-menu">
         <ul id="iq-sidebar-toggle" class="iq-menu">

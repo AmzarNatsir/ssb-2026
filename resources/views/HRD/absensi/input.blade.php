@@ -32,7 +32,7 @@
         <div class="iq-card">
             <div class="iq-card-header d-flex justify-content-between">
                 <div class="iq-header-title">
-                    <h4 class="card-title">Input Absensi Harian (Operator, Driver &amp; Helper)</h4>
+                    <h4 class="card-title">Input Absensi Harian</h4>
                 </div>
             </div>
             <div class="iq-card-body" style="width:100%; height:auto">
