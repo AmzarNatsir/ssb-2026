@@ -958,7 +958,11 @@ Route::group(['middleware' => 'auth'], function()
     {
         Route::get('/', 'Hrd\AbsensiController@index');
         Route::post('getAbsensi', 'Hrd\AbsensiController@list_data');
-        Route::get('exportExcel/{id_dept}/{bulan}/{tahun}', 'Hrd\AbsensiController@export_excel');
+        Route::get('exportExcel/{id_dept}/{bulan}/{tahun}/{id_jabatan?}', 'Hrd\AbsensiController@export_excel');
+        Route::get('input', 'Hrd\AbsensiController@form_input');
+        Route::post('getJabatanDept', 'Hrd\AbsensiController@get_jabatan_by_dept');
+        Route::post('inputGrid', 'Hrd\AbsensiController@load_input_grid');
+        Route::post('inputStore', 'Hrd\AbsensiController@store_input');
         Route::get('importdataabsensi', 'Hrd\AbsensiController@import_data_absensi');
         Route::post('previewdataabsensi', 'Hrd\AbsensiController@previewImportAbsensi');
         Route::post('storedataabsensi', 'Hrd\AbsensiController@doImportAbsensi');

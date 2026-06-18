@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Helpers\Hrdhelper;
 use App\Imports\AbsensiImport;
 use App\Exports\AbsensiMonitoringExport;
+use App\Models\HRD\AbsensiModel;
 use App\Models\HRD\DepartemenModel;
 use App\Models\HRD\CutiModel;
 use App\Models\HRD\IzinModel;
@@ -35,6 +36,7 @@ class AbsensiController extends Controller
     public function list_data(Request $request)
     {
         $id_dept = $request->id_dept;
+        $id_jabatan = $request->id_jabatan;
         $thn = $request->pil_tahun;
         $bln = $request->pil_bulan;
         $tgl_libur = array();
@@ -43,15 +45,20 @@ class AbsensiController extends Controller
             $tgl_libur[] = $lbr->tanggal;
         }
         $ket_periode = \App\Helpers\Hrdhelper::get_nama_bulan($bln)." ".$thn;
-        $list_karyawan = KaryawanModel::wherein('id_status_karyawan', [1, 2, 3, 7])->where('id_departemen', $id_dept)->where('nik', '<>', '999999999')->orderBy('nik', 'asc')->get();
+        $q_karyawan = KaryawanModel::wherein('id_status_karyawan', [1, 2, 3, 7])->where('id_departemen', $id_dept)->where('nik', '<>', '999999999');
+        if (!empty($id_jabatan)) {
+            $q_karyawan->where('id_jabatan', $id_jabatan);
+        }
+        $list_karyawan = $q_karyawan->orderBy('nik', 'asc')->get();
         // $thn = date('Y');
         // $bln = date('m');
         $jml_hari = Hrdhelper::tglAkhirBulan($thn, $bln);
-        $jml_cols = $jml_hari + 10;
+        $jml_cols = $jml_hari + 11;
         $html = "";
         $html .= "<table class='table table-hover table-bordered dataTable dataTable-scroll-x tbl_asbensi' style='font-size: small;'><thead><tr>
         <th rowspan='2' style='text-align:center'>No</th>
         <th rowspan='2' style='text-align:center'>NIK</th>
+        <th rowspan='2' style='text-align:center'>NIK Lama</th>
         <th rowspan='2' style='text-align:center'>Karyawan</th>
         <th colspan=".$jml_hari." style='text-align:center'>Periode ".$ket_periode."</th>
         <th rowspan='2' style='text-align:center'>Total Hadir</th>
@@ -87,6 +94,7 @@ class AbsensiController extends Controller
                 $html .= "<tr>
                 <td style='text-align:center'>".$nom."</td>
                 <td>".$list->nik."</td>
+                <td>".$list->nik_lama."</td>
                 <td><h5>".$list->nm_lengkap."</h5></td>";
                 // <td>".$list->nm_lengkap."</td>";
                 for($i=1; $i<=$jml_hari; $i++)
@@ -263,9 +271,11 @@ class AbsensiController extends Controller
         echo $html;
     }
 
-    public function export_excel($id_dept, $bulan, $tahun)
+    public function export_excel($id_dept, $bulan, $tahun, $id_jabatan = null)
     {
-        return (new AbsensiMonitoringExport($id_dept, $bulan, $tahun))
+        // 0 dari URL = semua jabatan
+        $id_jabatan = empty($id_jabatan) ? null : $id_jabatan;
+        return (new AbsensiMonitoringExport($id_dept, $bulan, $tahun, $id_jabatan))
             ->download('monitoring-absensi-' . $bulan . '-' . $tahun . '.xlsx');
     }
 
@@ -273,6 +283,163 @@ class AbsensiController extends Controller
     {
         // $data['all_departemen'] = DepartemenModel::where('status', 1)->get();
         return view("HRD.absensi.frmimport");
+    }
+
+    // ====== Form Input Absensi Harian (manual, mis. operator/driver/helper QC) ======
+    public function form_input()
+    {
+        $data['all_departemen'] = DepartemenModel::with(['get_master_divisi'])->where('status', 1)->get();
+        return view('HRD.absensi.input', $data);
+    }
+
+    public function get_jabatan_by_dept(Request $request)
+    {
+        $id_dept = $request->id_dept;
+        $jabatan = DB::table('hrd_karyawan')
+            ->join('mst_hrd_jabatan', 'hrd_karyawan.id_jabatan', '=', 'mst_hrd_jabatan.id')
+            ->where('hrd_karyawan.id_departemen', $id_dept)
+            ->wherein('hrd_karyawan.id_status_karyawan', [1, 2, 3, 7])
+            ->where('hrd_karyawan.nik', '<>', '999999999')
+            ->select('mst_hrd_jabatan.id', 'mst_hrd_jabatan.nm_jabatan')
+            ->distinct()
+            ->orderBy('mst_hrd_jabatan.nm_jabatan')
+            ->get();
+        return response()->json($jabatan);
+    }
+
+    public function load_input_grid(Request $request)
+    {
+        $id_dept = $request->id_dept;
+        $id_jabatan = $request->id_jabatan;
+        $tanggal = $request->tanggal; // format Y-m-d
+
+        $q = KaryawanModel::with(['get_jabatan'])
+            ->wherein('id_status_karyawan', [1, 2, 3, 7])
+            ->where('id_departemen', $id_dept)
+            ->where('nik', '<>', '999999999');
+        if (!empty($id_jabatan)) {
+            $q->where('id_jabatan', $id_jabatan);
+        }
+        $list_karyawan = $q->orderBy('id_jabatan')->orderBy('nik')->get();
+
+        // prefill jam IN/OUT + ishoma jika sudah ada data pada tanggal tsb (mengikuti logika grid)
+        foreach ($list_karyawan as $kry) {
+            $in = null;
+            $out = null;
+            $ishoma_out = null;
+            $ishoma_in = null;
+            if (!empty($kry->nik_lama)) {
+                $in = DB::table('hrd_absensi')->where('nik_lama', $kry->nik_lama)
+                    ->whereDate('tanggal', $tanggal)->where('status', 'C/Masuk')->min('jam');
+                $out = DB::table('hrd_absensi')->where('nik_lama', $kry->nik_lama)
+                    ->whereDate('tanggal', $tanggal)->where('status', 'C/Keluar')->max('jam');
+                $ishoma_out = DB::table('hrd_absensi')->where('nik_lama', $kry->nik_lama)
+                    ->whereDate('tanggal', $tanggal)->where('status', 'C/Keluar')
+                    ->whereBetween('jam', ['11:00', '14:00'])->min('jam');
+                $ishoma_in = DB::table('hrd_absensi')->where('nik_lama', $kry->nik_lama)
+                    ->whereDate('tanggal', $tanggal)->where('status', 'C/Masuk')
+                    ->whereBetween('jam', ['11:00', '14:00'])->max('jam');
+            }
+            $kry->jam_in = $in ? date('H:i', strtotime($in)) : '';
+            $kry->jam_out = $out ? date('H:i', strtotime($out)) : '';
+            $kry->jam_ishoma_out = $ishoma_out ? date('H:i', strtotime($ishoma_out)) : '';
+            $kry->jam_ishoma_in = $ishoma_in ? date('H:i', strtotime($ishoma_in)) : '';
+        }
+
+        $data['list_karyawan'] = $list_karyawan;
+        $data['tanggal'] = $tanggal;
+        $data['id_dept'] = $id_dept;
+        return view('HRD.absensi.input_grid', $data);
+    }
+
+    public function store_input(Request $request)
+    {
+        $request->validate([
+            'id_dept' => 'required',
+            'tanggal' => 'required|date',
+        ]);
+
+        $tanggal = $request->tanggal;
+        $nik_lama_arr = $request->nik_lama ?? [];
+        $jam_in_arr = $request->jam_in ?? [];
+        $jam_ishoma_out_arr = $request->jam_ishoma_out ?? [];
+        $jam_ishoma_in_arr = $request->jam_ishoma_in ?? [];
+        $jam_out_arr = $request->jam_out ?? [];
+        $re_jam = '/^([0-1][0-9]|2[0-3]):([0-5][0-9])$/';
+
+        DB::beginTransaction();
+        try {
+            $saved = 0;
+            foreach ($nik_lama_arr as $i => $nik_lama) {
+                if (empty($nik_lama)) {
+                    continue;
+                }
+                $jam_in = trim($jam_in_arr[$i] ?? '');
+                $jam_ishoma_out = trim($jam_ishoma_out_arr[$i] ?? '');
+                $jam_ishoma_in = trim($jam_ishoma_in_arr[$i] ?? '');
+                $jam_out = trim($jam_out_arr[$i] ?? '');
+                // semua kosong → tidak hadir / tidak diisi → lewati
+                if ($jam_in === '' && $jam_ishoma_out === '' && $jam_ishoma_in === '' && $jam_out === '') {
+                    continue;
+                }
+                // validasi format HH:MM utk setiap field terisi
+                foreach ([$jam_in, $jam_ishoma_out, $jam_ishoma_in, $jam_out] as $cek) {
+                    if ($cek !== '' && !preg_match($re_jam, $cek)) {
+                        DB::rollBack();
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Format jam tidak valid pada NIK Lama $nik_lama. Gunakan format HH:MM (mis. 07:30)."
+                        ]);
+                    }
+                }
+
+                $kry = KaryawanModel::where('nik_lama', $nik_lama)->first();
+                if (!$kry) {
+                    continue;
+                }
+
+                // idempotent: hapus entri (manual) lama utk nik_lama+tanggal ini, lalu tulis ulang
+                AbsensiModel::where('nik_lama', $nik_lama)
+                    ->whereDate('tanggal', $tanggal)
+                    ->whereIn('status', ['C/Masuk', 'C/Keluar'])
+                    ->delete();
+
+                // pasangan (jam, status): masuk pagi, keluar ishoma, masuk ishoma, pulang
+                $entries = [
+                    [$jam_in, 'C/Masuk'],
+                    [$jam_ishoma_out, 'C/Keluar'],
+                    [$jam_ishoma_in, 'C/Masuk'],
+                    [$jam_out, 'C/Keluar'],
+                ];
+                foreach ($entries as $e) {
+                    if ($e[0] === '') {
+                        continue;
+                    }
+                    AbsensiModel::create([
+                        'id_departemen' => $kry->id_departemen,
+                        'id_finger' => $kry->id_finger,
+                        'nik_lama' => $nik_lama,
+                        'tanggal' => $tanggal,
+                        'jam' => $e[0],
+                        'status' => $e[1],
+                        'user_id' => auth()->user()->id,
+                    ]);
+                }
+                $saved++;
+            }
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => "Data absensi tanggal " . date('d-m-Y', strtotime($tanggal)) . " berhasil disimpan ($saved karyawan)."
+            ]);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            Log::error('Store input absensi failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan data: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function previewImportAbsensi(Request $request)
@@ -554,6 +721,24 @@ class AbsensiController extends Controller
         $jam_ishoma_keluar = str_replace('-', '', $ishoma_keluar);
 
         $html = '<div class="schedule-card">';
+
+        // Tanpa scan istirahat (mis. input manual: hanya IN & OUT) → satu shift masuk-pulang
+        if (empty($jam_ishoma_keluar) && empty($jam_ishoma_masuk)) {
+            $waktu = $jam_masuk;
+            if (!empty($jam_pulang)) {
+                $waktu = (!empty($jam_masuk)) ? ($jam_masuk . '-' . $jam_pulang) : $jam_pulang;
+            }
+            $html .= '<div class="schedule-shift">';
+            $html .= '<span class="shift-badge pagi">🟦</span>';
+            $html .= '<span class="shift-label">Jam:</span>';
+            $html .= '<span class="shift-time">' . $waktu . '</span>';
+            if (!empty($jam_masuk) && !empty($jam_pulang)) {
+                $html .= '<span class="shift-duration">(' . $this->hitungDurasi($jam_masuk, $jam_pulang) . 'h)</span>';
+            }
+            $html .= '</div>';
+            $html .= '</div>';
+            return $html;
+        }
 
         if (!empty($jam_masuk)) {
             $html .= '<div class="schedule-shift">';

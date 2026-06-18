@@ -1,14 +1,15 @@
 <table border="1">
     <thead>
         <tr>
-            <th colspan="{{ $grid->jml_hari + 8 }}" style="text-align:center;">MONITORING ABSENSI KARYAWAN</th>
+            <th colspan="{{ $grid->jml_hari + 9 }}" style="text-align:center;">MONITORING ABSENSI KARYAWAN</th>
         </tr>
         <tr>
-            <th colspan="{{ $grid->jml_hari + 8 }}" style="text-align:center;">Departemen {{ $ket_departemen }} - Periode {{ $grid->ket_periode }}</th>
+            <th colspan="{{ $grid->jml_hari + 9 }}" style="text-align:center;">Departemen {{ $ket_departemen }} - Periode {{ $grid->ket_periode }}</th>
         </tr>
         <tr>
             <th rowspan="2" style="text-align:center;">No</th>
             <th rowspan="2" style="text-align:center;">NIK</th>
+            <th rowspan="2" style="text-align:center;">NIK Lama</th>
             <th rowspan="2" style="text-align:center;">Karyawan</th>
             <th colspan="{{ $grid->jml_hari }}" style="text-align:center;">Periode {{ $grid->ket_periode }}</th>
             <th rowspan="2" style="text-align:center;">Total Hadir</th>
@@ -29,6 +30,7 @@
         <tr>
             <td style="text-align:center;">{{ $nom }}</td>
             <td>{{ $row->nik }}</td>
+            <td>{{ $row->nik_lama }}</td>
             <td>{{ $row->nm_lengkap }}</td>
             @for($c = 1; $c <= $grid->jml_hari; $c++)
             <td style="text-align:center;">{{ $row->cells[$c]['val'] }}</td>
@@ -41,7 +43,7 @@
         </tr>
     @php $nom++; @endphp
     @empty
-        <tr><td colspan="{{ $grid->jml_hari + 8 }}" style="text-align:center;">Data Not Found !</td></tr>
+        <tr><td colspan="{{ $grid->jml_hari + 9 }}" style="text-align:center;">Data Not Found !</td></tr>
     @endforelse
     </tbody>
 </table>

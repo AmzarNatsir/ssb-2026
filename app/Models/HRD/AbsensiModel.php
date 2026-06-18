@@ -133,7 +133,7 @@ class AbsensiModel extends Model
 
     // Bangun grid harian absensi 1 departemen (mengikuti logika AbsensiController::list_data)
     // Dipakai untuk menampilkan & meng-export hasil filter agar identik.
-    public static function grid_bulanan($id_dept, $bulan, $tahun)
+    public static function grid_bulanan($id_dept, $bulan, $tahun, $id_jabatan = null)
     {
         $thn = (int) $tahun;
         $bln = (int) $bulan;
@@ -151,10 +151,13 @@ class AbsensiModel extends Model
             $tgl_libur[] = date('Y-m-d', strtotime($lbr->tanggal));
         }
 
-        $list_karyawan = \App\Models\HRD\KaryawanModel::wherein('id_status_karyawan', [1, 2, 3, 7])
+        $q_karyawan = \App\Models\HRD\KaryawanModel::wherein('id_status_karyawan', [1, 2, 3, 7])
             ->where('id_departemen', $id_dept)
-            ->where('nik', '<>', '999999999')
-            ->orderBy('nik', 'asc')->get();
+            ->where('nik', '<>', '999999999');
+        if (!empty($id_jabatan)) {
+            $q_karyawan->where('id_jabatan', $id_jabatan);
+        }
+        $list_karyawan = $q_karyawan->orderBy('nik', 'asc')->get();
 
         $rows = [];
         foreach ($list_karyawan as $kry) {
@@ -237,6 +240,7 @@ class AbsensiModel extends Model
 
             $rows[] = (object) [
                 'nik' => $kry->nik,
+                'nik_lama' => $kry->nik_lama,
                 'nm_lengkap' => $kry->nm_lengkap,
                 'cells' => $cells,
                 'tot_hadir' => $tot_hadir,

@@ -31,18 +31,21 @@
         margin-bottom: 0;
     }
 
-    /* Lebar & posisi kolom beku (No, NIK, Karyawan) — header hanya baris pertama */
+    /* Lebar & posisi kolom beku (No, NIK, NIK Lama, Karyawan) — header hanya baris pertama */
     .table thead tr:first-child th:nth-child(1),
-    .table tbody td:nth-child(1) { left: 0;     width: 55px;  min-width: 55px;  max-width: 55px; }
+    .table tbody td:nth-child(1) { left: 0;     width: 45px;  min-width: 45px;  max-width: 45px; }
     .table thead tr:first-child th:nth-child(2),
-    .table tbody td:nth-child(2) { left: 55px;  width: 120px; min-width: 120px; max-width: 120px; }
+    .table tbody td:nth-child(2) { left: 45px;  width: 100px; min-width: 100px; max-width: 100px; }
     .table thead tr:first-child th:nth-child(3),
-    .table tbody td:nth-child(3) { left: 175px; width: 160px; min-width: 160px; max-width: 160px; }
+    .table tbody td:nth-child(3) { left: 145px; width: 100px; min-width: 100px; max-width: 100px; }
+    .table thead tr:first-child th:nth-child(4),
+    .table tbody td:nth-child(4) { left: 245px; width: 150px; min-width: 150px; max-width: 150px; }
 
-    /* Body: 3 kolom kiri tetap saat scroll horizontal */
+    /* Body: 4 kolom kiri tetap saat scroll horizontal */
     .table tbody td:nth-child(1),
     .table tbody td:nth-child(2),
-    .table tbody td:nth-child(3) {
+    .table tbody td:nth-child(3),
+    .table tbody td:nth-child(4) {
         position: sticky;
         z-index: 2;
         background-color: #f9f9f9;
@@ -59,10 +62,11 @@
         border-bottom: 2px solid #dee2e6;
     }
 
-    /* Header 3 kolom kiri (No, NIK, Karyawan): beku ke atas & ke kiri sekaligus (pojok) */
+    /* Header 4 kolom kiri: beku ke atas & ke kiri sekaligus (pojok) */
     .table thead tr:first-child th:nth-child(1),
     .table thead tr:first-child th:nth-child(2),
-    .table thead tr:first-child th:nth-child(3) {
+    .table thead tr:first-child th:nth-child(3),
+    .table thead tr:first-child th:nth-child(4) {
         z-index: 4;
     }
 
@@ -76,7 +80,7 @@
         font-size: 13px;
     }
 
-    .table td:nth-child(3) {
+    .table td:nth-child(4) {
         text-align: left;
         padding: 10px !important;
     }
@@ -226,9 +230,12 @@
             </div>
         @endif
         <div class="iq-card">
-            <div class="iq-card-header d-flex justify-content-between">
+            <div class="iq-card-header d-flex justify-content-between align-items-center">
                 <div class="iq-header-title">
                     <h4 class="card-title">Monitoring Absensi Karyawan</h4>
+                </div>
+                <div class="iq-card-header-toolbar">
+                    <a href="{{ url('hrd/absensi/input') }}" class="btn btn-primary"><i class="fa fa-edit mr-2"></i>Absensi Harian</a>
                 </div>
             </div>
             <div class="iq-card-body" style="width:100%; height:auto">
@@ -254,7 +261,7 @@
                         <label class="d-block font-weight-bold mb-2">Tahun</label>
                         <input type="text" name="inp_tahun" id="inp_tahun" value="{{ date('Y') }}" class="form-control" maxlength="4" required>
                     </div>
-                    <div class="col-lg-4 col-md-7 col-sm-12 mb-3">
+                    <div class="col-lg-3 col-md-7 col-sm-12 mb-3">
                         <label class="d-block font-weight-bold mb-2">Departemen</label>
                         <select class="form-control" name="pil_departemen" id="pil_departemen">
                             <option value="">Pilih Departemen</option>
@@ -263,7 +270,13 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-lg-5 col-md-12 col-sm-12 mb-3">
+                    <div class="col-lg-2 col-md-5 col-sm-12 mb-3">
+                        <label class="d-block font-weight-bold mb-2">Jabatan</label>
+                        <select class="form-control" name="pil_jabatan" id="pil_jabatan">
+                            <option value="">- Semua Jabatan</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-4 col-md-12 col-sm-12 mb-3">
                         <div class="d-flex flex-wrap" style="gap: 8px;">
                             <button type="button" class="btn btn-primary" onClick="actFilter();"><i class="fa fa-search mr-2"></i>Filter</button>
                             <button type="button" class="btn btn-success" onClick="actExcel();"><i class="fa fa-table mr-2"></i>Excel</button>
@@ -322,9 +335,27 @@
         });
 
     });
+    // muat daftar jabatan sesuai departemen terpilih
+    $("#pil_departemen").on('change', function(){
+        var id_dept = $(this).val();
+        $("#pil_jabatan").html('<option value="">- Semua Jabatan</option>');
+        if(id_dept=="") return;
+        $.ajax({
+            type: "post",
+            headers: { 'X-CSRF-TOKEN': '<?php echo csrf_token() ?>' },
+            url: "{{ url('hrd/absensi/getJabatanDept') }}",
+            data: { id_dept:id_dept },
+            success: function(res){
+                $.each(res, function(i, item){
+                    $("#pil_jabatan").append('<option value="'+item.id+'">'+item.nm_jabatan+'</option>');
+                });
+            }
+        });
+    });
     var actFilter = function()
     {
         var id_dept = $("#pil_departemen").val();
+        var id_jabatan = $("#pil_jabatan").val();
         var pil_bulan = $("#pil_bulan").val();
         var pil_tahun = $("#inp_tahun").val();
         if(id_dept=="")
@@ -340,7 +371,7 @@
                         'X-CSRF-TOKEN' : '<?php echo csrf_token() ?>'
                     },
                 url : "{{ url('hrd/absensi/getAbsensi')}}",
-                data : {id_dept:id_dept, pil_bulan:pil_bulan, pil_tahun:pil_tahun},
+                data : {id_dept:id_dept, id_jabatan:id_jabatan, pil_bulan:pil_bulan, pil_tahun:pil_tahun},
                 beforeSend : function()
                 {
                     $('#spinner-div').show();
@@ -359,6 +390,7 @@
     var actExcel = function()
     {
         var id_dept = $("#pil_departemen").val();
+        var id_jabatan = $("#pil_jabatan").val();
         var pil_bulan = $("#pil_bulan").val();
         var pil_tahun = $("#inp_tahun").val();
         if(id_dept=="")
@@ -369,7 +401,8 @@
             alert('Kolom Pilihan Bulan tidak boleh kosong !');
             return false;
         } else {
-            window.open("{{ url('hrd/absensi/exportExcel') }}/"+id_dept+"/"+pil_bulan+"/"+pil_tahun);
+            var jab = (id_jabatan=="" || id_jabatan==null) ? 0 : id_jabatan;
+            window.open("{{ url('hrd/absensi/exportExcel') }}/"+id_dept+"/"+pil_bulan+"/"+pil_tahun+"/"+jab);
         }
     };
 </script>
