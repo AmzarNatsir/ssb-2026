@@ -5,6 +5,24 @@
         max-height: calc(100vh - 90px) !important;
         overflow-y: auto;
     }
+
+    /* Mode icon-with-text: cegah submenu flyout hilang saat kursor menuju ke arahnya.
+       Hilangkan geseran horizontal (translateX) yang menimbulkan celah sementara,
+       dan tahan submenu tetap muncul saat di-hover. */
+    body.icon-with-text .iq-sidebar-menu .iq-menu li ul,
+    body.icon-with-text .iq-sidebar-menu .iq-menu li:hover > ul {
+        transform: none !important;
+        transition: opacity 0.2s ease 0s, visibility 0.2s ease 0s !important;
+    }
+    /* Bridge tak terlihat menutup gap antara menu induk & submenu agar hover tidak putus */
+    body.icon-with-text .iq-sidebar-menu .iq-menu li > ul::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -12px;
+        width: 12px;
+        height: 100%;
+    }
 </style>
 <div id="sidebar-scrollbar">
     <nav class="iq-sidebar-menu">
