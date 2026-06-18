@@ -26,6 +26,9 @@ use App\Models\HRD\CutiIzinModel;
 use App\Models\HRD\PinjamanKaryawanModel;
 use App\Models\HRD\PinjamanKaryawanMutasiModel;
 use App\Models\HRD\SuratTeguranModel;
+use App\Models\HRD\SetupHariLiburModel;
+use App\Models\HRD\AbsensiModel;
+use App\Exports\AbsensiExport;
 use App\Traits\General;
 use App\Helpers\Hrdhelper;
 use Maatwebsite\Excel\Facades\Excel;
@@ -569,5 +572,36 @@ class PelaporanController extends Controller
             // Return 404 for any other errors to avoid exposing system information
             abort(404, 'Cuti document not found');
         }
+    }
+
+    //Pelaporan Absensi (rekap kehadiran per bulan)
+    public function absensi()
+    {
+        $data['all_departemen'] = DepartemenModel::where('status', 1)->get();
+        $data['list_bulan'] = Config::get("constants.bulan");
+        return view('HRD.pelaporan.absensi.index', $data);
+    }
+
+    public function filter_absensi($bulan, $tahun, $departemen)
+    {
+        $data['ket_bulan'] = \App\Helpers\Hrdhelper::get_nama_bulan($bulan);
+        $data['ket_tahun'] = $tahun;
+        $data['list_data'] = AbsensiModel::rekap_bulanan($bulan, $tahun, $departemen);
+        return view('HRD.pelaporan.absensi.result_filter', $data);
+    }
+
+    public function print_absensi($bulan, $tahun, $departemen)
+    {
+        $data['ket_bulan'] = \App\Helpers\Hrdhelper::get_nama_bulan($bulan);
+        $data['ket_tahun'] = $tahun;
+        $data['ket_departemen'] = ($departemen == 0) ? 'Semua Departemen' : optional(DepartemenModel::find($departemen))->nm_dept;
+        $data['list_data'] = AbsensiModel::rekap_bulanan($bulan, $tahun, $departemen);
+        $pdf = PDF::loadview('HRD.pelaporan.absensi.result_print', $data)->setPaper('A4', 'landscape');
+        return $pdf->stream();
+    }
+
+    public function excel_absensi($bulan, $tahun, $departemen)
+    {
+        return (new AbsensiExport($bulan, $tahun, $departemen))->download('rekapabsensi-'.$bulan.'-'.$tahun.'.xlsx');
     }
 }

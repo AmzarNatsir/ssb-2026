@@ -64,7 +64,7 @@
                                 </ul>
                             <li><a href="{{ url('hrd/setup/matriks_persetujuan') }}">Matriks Persetujuan</a></li>
                     </li>
-                    {{-- <li><a href="{{ url('hrd/setup/memointernal') }}">Memo Internal</a></li>
+                    <li><a href="{{ url('hrd/setup/memointernal') }}">Memo Internal</a></li>
                     <li>
                         <a href="#masterpenggajian" class="iq-waves-effect collapsed" data-toggle="collapse"
                             aria-expanded="false"><span>Penggajian</span><i
@@ -73,7 +73,7 @@
                             <li><a href="{{ url('hrd/setup/manajemengapok') }}">Gaji Pokok</a></li>
                             <li><a href="{{ url('hrd/setup/manajemenbpjs') }}">Pengaturan BPJS</a></li>
                         </ul>
-                    </li> --}}
+                    </li>
                 </ul>
                 </li>
                 <li>
@@ -145,17 +145,8 @@
                         <li><a href="{{ url('hrd/pelaporan/cutiizin') }}">Cuti/Izin</a></li>
                         <li><a href="{{ url('hrd/pelaporan/perdis') }}">Perjalanan Dinas</a></li>
                         <li><a href="{{ url('hrd/pelaporan/sp') }}">Surat Peringatan</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="#karyawan" class="iq-waves-effect collapsed" data-toggle="collapse" aria-expanded="false"><i
-                            class="fa fa-address-book-o"></i><span>Karyawan</span><i
-                            class="ri-arrow-right-s-line iq-arrow-right"></i></a>
-                    <ul id="karyawan" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-                        <li><a href="{{ url('hrd/karyawan/daftar') }}" class="iq-waves-effect"><i
-                                    class="ri-user-line"></i><span>Karyawan</span></a></li>
-                        <li><a href="{{ url('hrd/absensi') }}" class="iq-waves-effect"><i
-                                    class="ri-user-line"></i><span>Absensi</span></a></li>
+                        <li><a href="{{ url('hrd/pelaporan/absensi') }}">Absensi</a></li>
+                        <li><a href="{{ url('hrd/pelaporan/pinjamanKaryawan') }}">Pinjaman Karyawan</a></li>
                     </ul>
                 </li>
             @else

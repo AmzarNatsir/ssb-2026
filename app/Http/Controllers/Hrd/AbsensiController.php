@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Helpers\Hrdhelper;
 use App\Imports\AbsensiImport;
+use App\Exports\AbsensiMonitoringExport;
 use App\Models\HRD\DepartemenModel;
 use App\Models\HRD\CutiModel;
 use App\Models\HRD\IzinModel;
@@ -46,9 +47,11 @@ class AbsensiController extends Controller
         // $thn = date('Y');
         // $bln = date('m');
         $jml_hari = Hrdhelper::tglAkhirBulan($thn, $bln);
-        $jml_cols = $jml_hari + 8;
+        $jml_cols = $jml_hari + 10;
         $html = "";
         $html .= "<table class='table table-hover table-bordered dataTable dataTable-scroll-x tbl_asbensi' style='font-size: small;'><thead><tr>
+        <th rowspan='2' style='text-align:center'>No</th>
+        <th rowspan='2' style='text-align:center'>NIK</th>
         <th rowspan='2' style='text-align:center'>Karyawan</th>
         <th colspan=".$jml_hari." style='text-align:center'>Periode ".$ket_periode."</th>
         <th rowspan='2' style='text-align:center'>Total Hadir</th>
@@ -82,6 +85,8 @@ class AbsensiController extends Controller
                 $tot_perdis=0;
                 $tot_pelatihan=0;
                 $html .= "<tr>
+                <td style='text-align:center'>".$nom."</td>
+                <td>".$list->nik."</td>
                 <td><h5>".$list->nm_lengkap."</h5></td>";
                 // <td>".$list->nm_lengkap."</td>";
                 for($i=1; $i<=$jml_hari; $i++)
@@ -256,6 +261,12 @@ class AbsensiController extends Controller
         </tbody>
         </table>";
         echo $html;
+    }
+
+    public function export_excel($id_dept, $bulan, $tahun)
+    {
+        return (new AbsensiMonitoringExport($id_dept, $bulan, $tahun))
+            ->download('monitoring-absensi-' . $bulan . '-' . $tahun . '.xlsx');
     }
 
     public function import_data_absensi()

@@ -943,6 +943,11 @@ Route::group(['middleware' => 'auth'], function()
         //pinjaman karyawan
         Route::get('pinjamanKaryawan', 'Hrd\PelaporanController@pinjamanKaryawan');
         route::get("pinjamanKaryawan/filter/{bln}/{thn}/{departemen}", "Hrd\PelaporanController@filterPinjamanKaryawan");
+        //Absensi
+        route::get('absensi', 'Hrd\PelaporanController@absensi');
+        route::get('absensi/filter/{bln}/{thn}/{departemen}', 'Hrd\PelaporanController@filter_absensi');
+        route::get('absensi/print/{bln}/{thn}/{departemen}', 'Hrd\PelaporanController@print_absensi');
+        route::get('absensi/excel/{bln}/{thn}/{departemen}', 'Hrd\PelaporanController@excel_absensi');
     });
     Route::group(["prefix" => "tools"], function()
     {
@@ -953,6 +958,7 @@ Route::group(['middleware' => 'auth'], function()
     {
         Route::get('/', 'Hrd\AbsensiController@index');
         Route::post('getAbsensi', 'Hrd\AbsensiController@list_data');
+        Route::get('exportExcel/{id_dept}/{bulan}/{tahun}', 'Hrd\AbsensiController@export_excel');
         Route::get('importdataabsensi', 'Hrd\AbsensiController@import_data_absensi');
         Route::post('previewdataabsensi', 'Hrd\AbsensiController@previewImportAbsensi');
         Route::post('storedataabsensi', 'Hrd\AbsensiController@doImportAbsensi');

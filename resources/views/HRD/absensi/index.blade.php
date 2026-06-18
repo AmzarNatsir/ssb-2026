@@ -31,15 +31,25 @@
         margin-bottom: 0;
     }
 
-    .table thead th:first-child,
-    .table tbody td:first-child {
+    /* Lebar & posisi kolom beku (No, NIK, Karyawan) — header hanya baris pertama */
+    .table thead tr:first-child th:nth-child(1),
+    .table tbody td:nth-child(1) { left: 0;     width: 55px;  min-width: 55px;  max-width: 55px; }
+    .table thead tr:first-child th:nth-child(2),
+    .table tbody td:nth-child(2) { left: 55px;  width: 120px; min-width: 120px; max-width: 120px; }
+    .table thead tr:first-child th:nth-child(3),
+    .table tbody td:nth-child(3) { left: 175px; width: 160px; min-width: 160px; max-width: 160px; }
+
+    /* Body: 3 kolom kiri tetap saat scroll horizontal */
+    .table tbody td:nth-child(1),
+    .table tbody td:nth-child(2),
+    .table tbody td:nth-child(3) {
         position: sticky;
-        left: 0;
-        background-color: #fff;
         z-index: 2;
-        font-weight: 600;
+        background-color: #f9f9f9;
+        font-weight: 500;
     }
 
+    /* Header tetap di atas saat scroll vertikal */
     .table thead th {
         position: sticky;
         top: 0;
@@ -49,10 +59,11 @@
         border-bottom: 2px solid #dee2e6;
     }
 
-    .table tbody td:first-child {
-        z-index: 1;
-        font-weight: 500;
-        background-color: #f9f9f9;
+    /* Header 3 kolom kiri (No, NIK, Karyawan): beku ke atas & ke kiri sekaligus (pojok) */
+    .table thead tr:first-child th:nth-child(1),
+    .table thead tr:first-child th:nth-child(2),
+    .table thead tr:first-child th:nth-child(3) {
+        z-index: 4;
     }
 
     .table tbody tr:hover {
@@ -65,7 +76,7 @@
         font-size: 13px;
     }
 
-    .table td:first-child {
+    .table td:nth-child(3) {
         text-align: left;
         padding: 10px !important;
     }
@@ -225,8 +236,8 @@
                 {{ csrf_field() }}
 
                 <!-- Filter Section -->
-                <div class="row mb-4">
-                    <div class="col-lg-2 col-md-3 col-sm-12 mb-3">
+                <div class="row align-items-end mb-4">
+                    <div class="col-lg-2 col-md-3 col-sm-6 mb-3">
                         <label class="d-block font-weight-bold mb-2">Bulan</label>
                         <select class="form-control" name="pil_bulan" id="pil_bulan">
                             <option value="0">Pilih Bulan</option>
@@ -239,11 +250,11 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-lg-1 col-md-2 col-sm-12 mb-3">
+                    <div class="col-lg-1 col-md-2 col-sm-6 mb-3">
                         <label class="d-block font-weight-bold mb-2">Tahun</label>
                         <input type="text" name="inp_tahun" id="inp_tahun" value="{{ date('Y') }}" class="form-control" maxlength="4" required>
                     </div>
-                    <div class="col-lg-4 col-md-5 col-sm-12 mb-3">
+                    <div class="col-lg-4 col-md-7 col-sm-12 mb-3">
                         <label class="d-block font-weight-bold mb-2">Departemen</label>
                         <select class="form-control" name="pil_departemen" id="pil_departemen">
                             <option value="">Pilih Departemen</option>
@@ -252,11 +263,12 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-lg-3 col-md-2 col-sm-12 mb-3 d-flex align-items-end">
-                        <button type="button" class="btn btn-primary w-100" onClick="actFilter();"><i class="fa fa-search mr-2"></i>Filter</button>
-                    </div>
-                    <div class="col-lg-2 col-md-12 col-sm-12 mb-3 d-flex align-items-end">
-                        <a href="{{ url('hrd/absensi/importdataabsensi') }}" target="_new" class="btn btn-info w-100"><i class="fa fa-upload mr-2"></i>Import Data</a>
+                    <div class="col-lg-5 col-md-12 col-sm-12 mb-3">
+                        <div class="d-flex flex-wrap" style="gap: 8px;">
+                            <button type="button" class="btn btn-primary" onClick="actFilter();"><i class="fa fa-search mr-2"></i>Filter</button>
+                            <button type="button" class="btn btn-success" onClick="actExcel();"><i class="fa fa-table mr-2"></i>Excel</button>
+                            <a href="{{ url('hrd/absensi/importdataabsensi') }}" target="_new" class="btn btn-info"><i class="fa fa-upload mr-2"></i>Import Data</a>
+                        </div>
                     </div>
                 </div>
 
@@ -342,6 +354,22 @@
                     $('#spinner-div').hide();
                 }
             });
+        }
+    };
+    var actExcel = function()
+    {
+        var id_dept = $("#pil_departemen").val();
+        var pil_bulan = $("#pil_bulan").val();
+        var pil_tahun = $("#inp_tahun").val();
+        if(id_dept=="")
+        {
+            alert('Kolom Pilihan Departemen tidak boleh kosong !');
+            return false;
+        } else if(pil_bulan==0) {
+            alert('Kolom Pilihan Bulan tidak boleh kosong !');
+            return false;
+        } else {
+            window.open("{{ url('hrd/absensi/exportExcel') }}/"+id_dept+"/"+pil_bulan+"/"+pil_tahun);
         }
     };
 </script>
