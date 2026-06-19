@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\HRD\DepartemenModel;
+use App\Models\HRD\DivisiModel;
 use App\Models\HRD\KaryawanModel;
 use App\Models\HRD\MemoModel;
 use App\Models\HRD\PerubahanStatusModel;
@@ -17,6 +18,13 @@ class HrdApiController extends Controller
      *   summary="Get active departments",
      *   tags={"HRD"},
      *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="id_divisi",
+     *     in="query",
+     *     required=false,
+     *     description="Filter departments by division ID",
+     *     @OA\Schema(type="integer")
+     *   ),
      *   @OA\Response(
      *     response=200,
      *     description="Successful operation",
@@ -38,12 +46,17 @@ class HrdApiController extends Controller
      *   )
      * )
      */
-    public function getActiveDepartments()
+    public function getActiveDepartments(Request $request)
     {
-        $departments = DepartemenModel::with(['get_master_divisi:id,nm_divisi'])
+        $query = DepartemenModel::with(['get_master_divisi:id,nm_divisi'])
             ->select('id', 'nm_dept', 'id_divisi', 'status')
-            ->where('status', 1)
-            ->orderBy('nm_dept')
+            ->where('status', 1);
+
+        if ($request->filled('id_divisi')) {
+            $query->where('id_divisi', $request->input('id_divisi'));
+        }
+
+        $departments = $query->orderBy('nm_dept')
             ->get()
             ->map(function ($department) {
                 return [
@@ -57,6 +70,56 @@ class HrdApiController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $departments,
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *   path="/hrd/divisi/active",
+     *   summary="Get active divisions",
+     *   tags={"HRD"},
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="id_divisi",
+     *     in="query",
+     *     required=false,
+     *     description="Filter by division ID",
+     *     @OA\Schema(type="integer")
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="Successful operation",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       @OA\Property(property="status", type="string", example="success"),
+     *       @OA\Property(
+     *         property="data",
+     *         type="array",
+     *         @OA\Items(
+     *           type="object",
+     *           @OA\Property(property="id", type="integer", example=1),
+     *           @OA\Property(property="nm_divisi", type="string", example="Human Capital")
+     *         )
+     *       )
+     *     )
+     *   )
+     * )
+     */
+    public function getActiveDivisi(Request $request)
+    {
+        $query = DivisiModel::select('id', 'nm_divisi')
+            ->where('status', 1);
+
+        if ($request->filled('id_divisi')) {
+            $query->where('id', $request->input('id_divisi'));
+        }
+
+        $divisi = $query->orderBy('nm_divisi')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $divisi,
         ]);
     }
 

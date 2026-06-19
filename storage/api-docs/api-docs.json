@@ -22,6 +22,17 @@
                 ],
                 "summary": "Get active departments",
                 "operationId": "8b137a632c5844656736521b3f1d26f8",
+                "parameters": [
+                    {
+                        "name": "id_divisi",
+                        "in": "query",
+                        "description": "Filter departments by division ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -53,6 +64,65 @@
                                                         "type": "string",
                                                         "example": "Human Capital",
                                                         "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/hrd/divisi/active": {
+            "get": {
+                "tags": [
+                    "HRD"
+                ],
+                "summary": "Get active divisions",
+                "operationId": "e11f34a1f02006fffb09386f79fd7373",
+                "parameters": [
+                    {
+                        "name": "id_divisi",
+                        "in": "query",
+                        "description": "Filter by division ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "nm_divisi": {
+                                                        "type": "string",
+                                                        "example": "Human Capital"
                                                     }
                                                 },
                                                 "type": "object"
