@@ -22,7 +22,7 @@
         }
 
         body {
-            margin: 110px 80px;
+            margin: 140px 80px 110px 80px;
             font-size: 12px;
             font-family: 'Poppins', sans-serif;
         }
