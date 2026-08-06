@@ -94,7 +94,7 @@ class PerdisController extends Controller
         $thn = date('Y');
         $bln =  hrdfunction::get_bulan_romawi(date('m'));
         $no_urut = 1;
-        $ket_surat = "SPJ/SSB";
+        $ket_surat = "SPD/SSB";
         $nomor_awal = $ket_surat."/".$bln."/".$thn;
         $result = PerdisModel::whereNotNull('no_perdis')->whereYear('tgl_perdis', $thn)->orderBy('id', 'desc')->first();
         if(empty($result->no_perdis))
