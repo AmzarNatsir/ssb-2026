@@ -71,7 +71,7 @@ $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
     </div>
     </header>
 <main>
-<table style="width: 100%;" class="isi">
+<table style="width: 100%;" style='border-collapse:collapse;' cellpadding="4">
     <tr>
         <td colspan="4" style="text-align: center; font-size:large"><b>SURAT PERJALANAN DINAS</b></td>
     </tr>
