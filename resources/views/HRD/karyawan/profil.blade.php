@@ -399,7 +399,7 @@
                                             @foreach($list_rwyt_pendidikan as $pendidikan)
                                             <tr>
                                                 <td>{{$nom}}</td>
-                                                <td>{{ $pendidikan->get_jenjang_pendidikan($lbk->id_jenjang) }}</td>
+                                                <td>{{ $pendidikan->get_jenjang_pendidikan($pendidikan->id_jenjang) }}</td>
                                                 <td>{{ $pendidikan->nm_sekolaj_pt }}</td>
                                                 <td>{{ $pendidikan->alamat }}</td>
                                                 <td>{{ $pendidikan->mulai_tahun." s/d".$pendidikan->sampai_tahun }}</td>
