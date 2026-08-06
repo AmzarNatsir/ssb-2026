@@ -8,7 +8,7 @@ $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
 <title>SSB | Smart System Base | HRD | Perjalanan Dinas | Surat Perjalanan Dinas</title>
 <style>
     @page {
-        margin: 10px;
+        margin: 0px;
     }
     body {
         margin : 120px 100px;
@@ -40,7 +40,7 @@ $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
     .information table {
         padding: 10px;
     }
-    header { position: fixed; top: 10px; left: 20px; right: 20px; height: 30px; }
+    header { position: fixed; top: -10px; left: 20px; right: 20px; height: 30px; }
     </style>
     </head>
 <body>
