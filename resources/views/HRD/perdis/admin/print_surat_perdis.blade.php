@@ -69,6 +69,7 @@ $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
         </table>
     </div>
     </header>
+<body>
 <main>
 <table style="width: 100%;" class="isi">
     <tr>
