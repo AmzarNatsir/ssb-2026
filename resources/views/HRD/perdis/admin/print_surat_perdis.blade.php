@@ -11,7 +11,7 @@ $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
         margin: 0px;
     }
     body {
-        margin : 110px 100px;
+        margin : 120px 100px;
         font-size: 12px;
         font-family: 'Poppins', sans-serif;
     }
@@ -40,11 +40,7 @@ $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
     .information table {
         padding: 10px;
     }
-    header { position: fixed; top: -10px; left: 0px; right: 0px; background-color: #03a9f4; height: 30px; }
-    /*
-    footer { position: fixed; bottom: -60px; left: 0px; right: 0px; background-color: #03a9f4; height: 25px; }
-    */
-    .page-break:last-child { page-break-after: never; }
+    header { position: fixed; top: 10px; left: 20px; right: 20px; height: 30px; }
     </style>
     </head>
 <body>
