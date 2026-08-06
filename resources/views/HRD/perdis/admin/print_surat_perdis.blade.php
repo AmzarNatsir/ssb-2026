@@ -50,6 +50,7 @@ $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
     .page-break:last-child { page-break-after: never; }
     </style>
     </head>
+<body>
     <header>
     <div class="information">
         <table width="100%">
@@ -69,7 +70,6 @@ $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
         </table>
     </div>
     </header>
-<body>
 <main>
 <table style="width: 100%;" class="isi">
     <tr>
