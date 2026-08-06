@@ -30,8 +30,8 @@
         @foreach ($list_matriks as $m)
         <tr>
             <td>{{ $m->approval_level }}</td>
-            <td>{{ $m->getPejabat->nm_lengkap }}</td>
-            <td>{{ $m->getPejabat->get_jabatan->nm_jabatan }}</td>
+            <td>{{ optional($m->getPejabat)->nm_lengkap ?? '(Karyawan tidak ditemukan)' }}</td>
+            <td>{{ optional(optional($m->getPejabat)->get_jabatan)->nm_jabatan }}</td>
             <td><button type="button" class="btn btn-danger" name="btn_del[]" onclick="goDelete(this)" value="{{ $m->id }}"><i class="ri-delete-bin-line pr-0"></i></button></td>
         </tr>
         @endforeach

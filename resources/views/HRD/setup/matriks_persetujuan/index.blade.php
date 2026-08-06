@@ -191,8 +191,8 @@
                                     @endif
                                     <div class="chain-step">
                                         <div class="step-badge">{{ $matriks->approval_level }}</div>
-                                        <div class="step-name">{{ $matriks->getPejabat->nm_lengkap }}</div>
-                                        <div class="step-jabatan">{{ $matriks->getPejabat->get_jabatan->nm_jabatan }}</div>
+                                        <div class="step-name">{{ optional($matriks->getPejabat)->nm_lengkap ?? '(Karyawan tidak ditemukan)' }}</div>
+                                        <div class="step-jabatan">{{ optional(optional($matriks->getPejabat)->get_jabatan)->nm_jabatan }}</div>
                                     </div>
                                 </div>
                                 @endforeach
