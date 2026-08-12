@@ -1,7 +1,8 @@
 @php
-    $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
+    $fl_logo  = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
     $qr_url   = 'https://hrd.ptssb.my.id/verified';
-    $qr_image = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')->size(80)->generate($qr_url));
+    // Gunakan format SVG agar tidak memerlukan ekstensi imagick
+    $qr_image = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(80)->generate($qr_url));
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -163,7 +164,7 @@
                             <td style="height: 70px"></td>
                             <td style="height: 70px"></td>
                             <td style="height: 70px; text-align: center; vertical-align: bottom;">
-                                <img src="data:image/png;base64,{{ $qr_image }}" width="70" height="70" />
+                                <img src="data:image/svg+xml;base64,{{ $qr_image }}" width="70" height="70" />
                             </td>
                         </tr>
                         <tr>
