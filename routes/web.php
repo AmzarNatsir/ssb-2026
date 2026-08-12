@@ -17,6 +17,11 @@ Route::get('/', 'Auth\LoginController@showLoginForm')->name('auth.login');
 Route::post('/', 'Auth\LoginController@login')->name('auth.do.login');
 Route::post('/logout', 'Auth\LoginController@logout')->name('auth.logout');
 
+// Route publik untuk verifikasi QR Code surat (tanpa login)
+Route::get('/verified', function () {
+    return view('verified');
+})->name('qr.verified');
+
 // === SSO Single Logout (Tahap 5) — front-channel ===
 // Client (ESS, dst) mengarahkan browser ke sini untuk mengakhiri session IdP
 // + revoke token, lalu redirect balik ke client (divalidasi anti open-redirect).

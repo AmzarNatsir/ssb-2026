@@ -1,5 +1,7 @@
 @php
     $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
+    $qr_url   = 'https://hrd.ptssb.my.id/verified';
+    $qr_image = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')->size(80)->generate($qr_url));
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -52,7 +54,7 @@
 
         header {
             position: fixed;
-            top: -20px;
+            top: -25px;
             left: 20px;
             right: 20px;
             height: 30px;
@@ -158,7 +160,11 @@
                             <td>Diketahui oleh,</td>
                         </tr>
                         <tr>
-                            <td style="height: 50px"></td>
+                            <td style="height: 70px"></td>
+                            <td style="height: 70px"></td>
+                            <td style="height: 70px; text-align: center; vertical-align: bottom;">
+                                <img src="data:image/png;base64,{{ $qr_image }}" width="70" height="70" />
+                            </td>
                         </tr>
                         <tr>
                             <td><b>{{ $dt_st->get_diajukan_oleh->nm_lengkap }}</b></td>
