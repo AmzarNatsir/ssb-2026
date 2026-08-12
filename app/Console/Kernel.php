@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\ProsesFinalResign;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -13,7 +14,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        //
+        ProsesFinalResign::class,
     ];
 
     /**
@@ -24,7 +25,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Proses finalisasi resign setiap hari pukul 00:05 dini hari
+        $schedule->command('resign:proses-final')->dailyAt('00:05');
     }
 
     /**
@@ -39,3 +41,4 @@ class Kernel extends ConsoleKernel
         require base_path('routes/console.php');
     }
 }
+

@@ -132,28 +132,35 @@ class ResignController extends Controller
 
         $data = [
             'cara_keluar' => $request->caraKeluar,
-            'tgl_skk' => $tgl_skk,
-            'nomor_skk' => $this->buat_nomor_skk($tgl_skk),
-            'tgl_eff_resign' =>  $tgl_resign,
+            'tgl_skk'     => $tgl_skk,
+            'nomor_skk'   => $this->buat_nomor_skk($tgl_skk),
+            'tgl_eff_resign' => $tgl_resign,
         ];
 
+        // Simpan data SKK resign
         ResignModel::find($id_pengajuan)->update($data);
-        //update data karyawan
-        $update_karyawan = KaryawanModel::find($request->id_karyawan);
-        $update_karyawan->id_status_karyawan = 4; //status resign
-        $update_karyawan->tgl_resign = $tgl_resign;
-        $update_karyawan->update();
-        //delete users
-        $data_user = User::where('nik', $update_karyawan->nik);
-        if($data_user->get()->count() > 0)
-        {
-            $user = User::find($data_user->first()->id);
-            $roles_user = $user->roles;
-            foreach ($roles_user as $lroles) {
-                $user->removeRole($lroles->id);
+
+        // Update status karyawan & hapus akun user hanya jika tgl_resign
+        // sudah jatuh tempo (sudah lewat atau sama dengan hari ini)
+        if (Carbon::parse($tgl_resign)->lte(Carbon::today())) {
+            // Update status karyawan menjadi resign
+            $update_karyawan = KaryawanModel::find($request->id_karyawan);
+            $update_karyawan->id_status_karyawan = 4; // status resign
+            $update_karyawan->tgl_resign = $tgl_resign;
+            $update_karyawan->update();
+
+            // Hapus akun user beserta roles-nya
+            $data_user = User::where('nik', $update_karyawan->nik);
+            if ($data_user->count() > 0) {
+                $user = User::find($data_user->first()->id);
+                $roles_user = $user->roles;
+                foreach ($roles_user as $lroles) {
+                    $user->removeRole($lroles->id);
+                }
+                $user->delete();
             }
-            $user->delete();
         }
+
         return redirect('hrd/resign')->with('konfirm', 'Data berhasil disimpan');
     }
     public function print_skk($id_pengajuan)
