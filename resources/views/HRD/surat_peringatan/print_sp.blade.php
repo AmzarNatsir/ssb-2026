@@ -1,6 +1,6 @@
 @php
-    $fl_logo  = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
-    $qr_url   = 'https://hrd.ptssb.my.id/verified';
+    $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
+    $qr_url = 'https://hrd.ptssb.my.id/verified';
     // Gunakan format SVG agar tidak memerlukan ekstensi imagick
     $qr_image = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(80)->generate($qr_url));
 @endphp
@@ -173,7 +173,7 @@
             <tr>
                 <td style="height: 70px"></td>
                 @foreach ($approval as $space)
-                    <td style="width: {{ $witdhColumn }}%; height: 70px; text-align: center; vertical-align: bottom;">
+                    <td style="width: {{ $witdhColumn }}%; height: 70px; text-align: left; vertical-align: bottom;">
                         @if ($loop->first)
                             <img src="data:image/svg+xml;base64,{{ $qr_image }}" width="70" height="70" />
                         @endif
