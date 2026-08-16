@@ -40,7 +40,7 @@ $fl_logo = App\Helpers\Hrdhelper::get_profil_perusahaan()->logo_perusahaan;
     .information table {
         padding: 10px;
     }
-    header { position: fixed; top: -10px; left: 0px; right: 0px; background-color: #03a9f4; height: 30px; }
+    header { position: fixed; top: -10px; left: 100px; right: 100px; background-color: #03a9f4; height: 30px; }
     /*
     footer { position: fixed; bottom: -60px; left: 0px; right: 0px; background-color: #03a9f4; height: 25px; }
     */
