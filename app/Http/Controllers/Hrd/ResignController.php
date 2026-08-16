@@ -108,7 +108,7 @@ class ResignController extends Controller
         // $bln = date('m');
         $bln =  hrdfunction::get_bulan_romawi(date('m'));
         $no_urut = 1;
-        $ket_surat = "SSB / SSB / SKK / ";
+        $ket_surat = "SSB / SKK / ";
         $nomor_awal = $ket_surat.$bln."-".$thn;
         $result = ResignModel::where('sts_pengajuan', 2)->orderBy('tgl_skk', 'desc')->first();
         if(empty($result->nomor_skk))
